@@ -35,6 +35,7 @@ $posts = $posts->fetchAll();
 
 $pages = max(1, (int)ceil($total / $perPage));
 ?>
+<?php require __DIR__ . '/db.php'; ?> 
 <!doctype html>
 <html>
 <head>
@@ -81,5 +82,6 @@ $pages = max(1, (int)ceil($total / $perPage));
 <div class="d-flex align-items-center justify-content-between mb-3">
   <a class="btn btn-outline-secondary" href="/boards.php">&larr; Back to Boards</a>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

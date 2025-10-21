@@ -2,7 +2,9 @@
 declare(strict_types=1);
 require __DIR__ . '/session.php';
 require __DIR__ . '/db.php';
+
 ?>
+<?php include __DIR__ . '/header.php'; ?>
 <!doctype html>
 <html>
 <head>
@@ -27,5 +29,6 @@ require __DIR__ . '/db.php';
   <hr>
   <p class="text-muted">DB connection OK (<?= htmlspecialchars(getenv('DB_NAME') ?: 'studyhall') ?>)</p>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

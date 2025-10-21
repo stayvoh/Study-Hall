@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS user_profile (
   user_id   INT UNSIGNED NOT NULL PRIMARY KEY,
   username  VARCHAR(50) NOT NULL,
   bio       VARCHAR(200) NULL,
+  profile_picture LONGBLOB NULL,  -- binary image data
+  mime_type VARCHAR(100) NULL,    -- e.g. "image/png" or "image/jpeg"
   CONSTRAINT fk_profile_user
     FOREIGN KEY (user_id) REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
