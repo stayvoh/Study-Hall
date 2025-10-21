@@ -14,7 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $pass2 = $_POST['password2'] ?? '';
 
   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Enter a valid email.';
-  if (strlen($pass) < 8) $errors[] = 'Password must be at least 8 characters.';
+  if (strlen($pass) < 8) $errorsa[] = 'Password must be at least 8 characters.';
   if ($pass !== $pass2) $errors[] = 'Passwords do not match.';
 
   if (!$errors) {
@@ -29,9 +29,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           ->execute([$email, $hash]);
       $uid = (int)$pdo->lastInsertId();
       // optional profile stub:
-      $pdo->prepare('INSERT INTO user_profile(user_id, username) VALUES (?, ?)')
-          ->execute([$uid, explode('@', $email, 2)[0]]);
+
+      $profilePic = null;
+      $mimeType = null;
+        if (!empty($_FILES['profile_picture']['tmp_name']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                $profilePic = file_get_contents($_FILES['profile_picture']['tmp_name']);
+                $mimeType = $_FILES['profile_picture']['type'];
+        }
+
+     $username = explode('@', $email, 2)[0];
+
+       $stmt = $pdo->prepare('
+         INSERT INTO user_profile (user_id, username, profile_picture, mime_type)
+           VALUES (?, ?, ?, ?)
+        ');
+
+        $stmt->execute([$uid, $username, $profilePic, $mimeType]);
+
       $success = true;
+
+
     }
   }
 }
@@ -55,12 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="alert alert-danger"><?= htmlspecialchars($e) ?></div>
   <?php endforeach; ?>
 
-  <form method="post" novalidate>
+    <form method="post" novalidate enctype="multipart/form-data">
     <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
     <div class="mb-3">
       <label class="form-label">Email</label>
       <input class="form-control" type="email" name="email" required>
     </div>
+    <div class="mb-3">
+  <label class="form-label">Profile Picture (optional)</label>
+  <input class="form-control" type="file" name="profile_picture" accept="image/*">
+   </div>
     <div class="mb-3">
       <label class="form-label">Password</label>
       <input class="form-control" type="password" name="password" minlength="8" required>

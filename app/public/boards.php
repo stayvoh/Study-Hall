@@ -4,9 +4,11 @@ require __DIR__ . '/session.php';
 require_login();
 require __DIR__ . '/db.php';
 
+
 $stmt = $pdo->query('SELECT id, name, description, created_at FROM board ORDER BY name');
 $boards = $stmt->fetchAll();
 ?>
+<?php include __DIR__ . '/header.php';?>
 <!doctype html>
 <html>
 <head>
@@ -30,5 +32,6 @@ $boards = $stmt->fetchAll();
     <?php endforeach; ?>
   </div>
 </div>
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

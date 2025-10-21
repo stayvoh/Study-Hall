@@ -29,7 +29,6 @@ COPY docker/php/php.ini       /etc/php8/apache2/php.ini
 WORKDIR /var/www/html
 COPY app/ /var/www/html/
 RUN chown -R wwwrun:www /var/www/html
-
 EXPOSE 80
 
 # Use openSUSE helper to start Apache (reads /etc/sysconfig/apache2)
