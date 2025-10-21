@@ -9,8 +9,27 @@ RUN zypper -n ref && zypper -n up && \
       php8 php8-cli \
       php8-mysql php8-pdo php8-mbstring php8-curl php8-zip php8-gd php8-intl \
       php8-dom php8-xmlreader php8-xmlwriter php8-iconv php8-ctype php8-fileinfo \
-      mariadb-client curl && \
+      php8-openssl php8-phar \
+      mariadb-client curl git unzip && \
     zypper -n clean --all
+
+
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- \
+      --install-dir=/usr/local/bin --filename=composer
+
+# Set working directory
+WORKDIR /var/www/html/app
+
+# Copy composer files first
+COPY app/composer.json app/composer.lock ./
+
+# Install dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Copy the rest of the app
+COPY app/ /var/www/html/app/
+
 
 # Make sure vhosts are included & index.php takes priority
 RUN sed -i 's/^#IncludeOptional vhosts.d\/\*\.conf/IncludeOptional vhosts.d\/\*\.conf/' /etc/apache2/httpd.conf && \
@@ -25,9 +44,10 @@ RUN sed -i 's/^APACHE_MPM=.*/APACHE_MPM="prefork"/' /etc/sysconfig/apache2 && \
 COPY docker/apache/vhost.conf /etc/apache2/vhosts.d/studyhall.conf
 COPY docker/php/php.ini       /etc/php8/apache2/php.ini
 
-# App
+# App (preserve app/ folder inside container)
 WORKDIR /var/www/html
-COPY app/ /var/www/html/
+COPY app/ /var/www/html/app/
+
 RUN chown -R wwwrun:www /var/www/html
 
 EXPOSE 80

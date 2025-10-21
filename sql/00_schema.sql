@@ -14,6 +14,10 @@ CREATE TABLE IF NOT EXISTS user_account (
   UNIQUE KEY uq_user_email (email)
 ) ENGINE=InnoDB;
 
+ALTER TABLE user_account
+  ADD remember_token VARCHAR(64) NULL,
+  ADD remember_expiry DATETIME NULL;
+
 -- Optional profile (safe to leave empty for now)
 CREATE TABLE IF NOT EXISTS user_profile (
   user_id   INT UNSIGNED NOT NULL PRIMARY KEY,
@@ -60,6 +64,16 @@ CREATE TABLE IF NOT EXISTS comment (
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX ix_post_created (post_id, created_at)
 ) ENGINE=InnoDB;
+
+-- Forgot password
+CREATE TABLE password_reset (
+  user_id INT UNSIGNED NOT NULL,
+  token VARCHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  PRIMARY KEY (user_id),
+  FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE
+);
+
 
 -- Foreign keys
 ALTER TABLE post

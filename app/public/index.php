@@ -1,31 +1,69 @@
 <?php
 declare(strict_types=1);
-require __DIR__ . '/session.php';
-require __DIR__ . '/db.php';
-?>
-<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Study Hall</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="p-4">
-<div class="container">
-  <h1 class="mb-3">Study Hall</h1>
 
-  <?php if (!empty($_SESSION['uid'])): ?>
-    <div class="alert alert-success">You are logged in as <strong><?= htmlspecialchars($_SESSION['email']) ?></strong>.</div>
-    <a class="btn btn-primary" href="/boards.php">Boards</a>
-    <a class="btn btn-secondary" href="/logout.php">Logout</a>
-  <?php else: ?>
-    <div class="alert alert-info">You are not logged in.</div>
-    <a class="btn btn-primary" href="/login.php">Login</a>
-    <a class="btn btn-outline-primary" href="/register.php">Register</a>
-  <?php endif; ?>
+// Composer autoloader (for PHPMailer and any future libraries)
+require __DIR__ . '/../vendor/autoload.php';
 
-  <hr>
-  <p class="text-muted">DB connection OK (<?= htmlspecialchars(getenv('DB_NAME') ?: 'studyhall') ?>)</p>
-</div>
-</body>
-</html>
+// Core
+require __DIR__ . '/../core/Session.php';
+require __DIR__ . '/../core/Database.php';
+require __DIR__ . '/../core/BaseController.php';
+
+// Models
+require __DIR__ . '/../models/User.php';
+
+// Controllers
+require __DIR__ . '/../controllers/LoginController.php';
+require __DIR__ . '/../controllers/RegisterController.php';
+require __DIR__ . '/../controllers/ForgotPasswordController.php';
+require __DIR__ . '/../controllers/ResetPasswordController.php';
+require __DIR__ . '/../controllers/DashboardController.php';
+require __DIR__ . '/../controllers/LogoutController.php';
+
+// Simple router
+$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+
+if ($uri === '' || $uri === 'login') {
+    $controller = new LoginController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->login();
+    } else {
+        $controller->showForm();
+    }
+
+} elseif ($uri === 'register') {
+    $controller = new RegisterController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->register();
+    } else {
+        $controller->showForm();
+    }
+
+} elseif ($uri === 'forgot') {
+    $controller = new ForgotPasswordController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->sendReset();
+    } else {
+        $controller->showForm();
+    }
+
+} elseif ($uri === 'reset') {
+    $controller = new ResetPasswordController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->reset();
+    } else {
+        $controller->showForm();
+    }
+
+} elseif ($uri === 'dashboard') {
+    $controller = new DashboardController();
+    $controller->index();
+
+} elseif ($uri === 'logout') {
+    $controller = new LogoutController();
+    $controller->index();
+
+} else {
+    http_response_code(404);
+    echo "404 Not Found";
+}

@@ -1,0 +1,49 @@
+.btn-orange {
+    background-color: #fd5121;
+    border-color: #fd5121;
+    color: #fff;
+}
+.btn-orange:hover {
+    background-color: #e6481d; /* darker shade for hover */
+    border-color: #e6481d;
+    color: #fff;
+}
+.btn-green {
+    background-color: #1ac742; /* darker green */
+    border-color: #1ac742;
+    color: #fff;
+}
+.btn-green:hover {
+    background-color: #169b34; /* even darker on hover */
+    border-color: #169b34;
+    color: #fff;
+}
+a.forgot-link {
+    color: #5121fd;
+    text-decoration: none;
+}
+a.forgot-link:hover {
+    color: #3e19c5; /* darker purple on hover */
+    text-decoration: underline;
+}
+a.register-link {
+    color: #5121fd;
+    text-decoration: none;
+}
+a.register-link:hover {
+    color: #3e19c5; /* darker purple on hover */
+    text-decoration: underline;
+}
+a.login-link {
+    color: #5121fd;
+    text-decoration: none;
+}
+a.login-link:hover {
+    color: #3e19c5; /* darker purple on hover */
+    text-decoration: underline;
+}
+/* Change checkbox color when checked */
+.form-check-input:checked {
+    background-color: #5121fd;
+    border-color: #5121fd;
+}

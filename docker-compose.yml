@@ -5,27 +5,29 @@ services:
     ports:
       - "8080:80"
     environment:
-      - DB_HOST=db
-      - DB_NAME=studyhall
-      - DB_USER=studyhall
-      - DB_PASS=change_me
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./app:/var/www/html/app
 
   db:
     image: mariadb:10.11
     container_name: studyhall_db
     environment:
-      - MARIADB_ROOT_PASSWORD=supersecret
-      - MARIADB_DATABASE=studyhall
-      - MARIADB_USER=studyhall
-      - MARIADB_PASSWORD=change_me
+      - MARIADB_ROOT_PASSWORD=${MARIADB_ROOT_PASSWORD}
+      - MARIADB_DATABASE=${MARIADB_DATABASE}
+      - MARIADB_USER=${MARIADB_USER}
+      - MARIADB_PASSWORD=${MARIADB_PASSWORD}
     volumes:
       - dbdata:/var/lib/mysql
       - ./sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root -psupersecret || exit 1"]
+      test: ["CMD-SHELL", "mariadb-admin ping -h localhost -u root -p${MARIADB_ROOT_PASSWORD} || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 10
