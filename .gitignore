@@ -1,11 +1,8 @@
 # Environment files
 .env
 
-# Node modules
-node_modules/
-
-# Prettier config
-.prettierrc
+# .sh
+migrate_branches.sh
 
 # Logs
 *.log
