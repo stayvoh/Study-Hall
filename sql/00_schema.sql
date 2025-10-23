@@ -74,6 +74,26 @@ CREATE TABLE password_reset (
   FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE
 );
 
+-- Tags
+CREATE TABLE IF NOT EXISTS tag (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name        VARCHAR(80) NOT NULL,
+  slug        VARCHAR(100) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_tag_name (name),
+  UNIQUE KEY uq_tag_slug (slug)
+) ENGINE=InnoDB;
+
+-- Post <-> Tag (many-to-many)
+CREATE TABLE IF NOT EXISTS post_tag (
+  post_id INT UNSIGNED NOT NULL,
+  tag_id  INT UNSIGNED NOT NULL,
+  PRIMARY KEY (post_id, tag_id),
+  CONSTRAINT fk_pt_post FOREIGN KEY (post_id) REFERENCES post(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_pt_tag  FOREIGN KEY (tag_id)  REFERENCES tag(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
 -- Foreign keys
 ALTER TABLE post
@@ -87,3 +107,12 @@ ALTER TABLE comment
     ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE post
+  ADD FULLTEXT KEY ft_post_title_body (title, body);
+
+ALTER TABLE user_account
+  ADD INDEX idx_user_email (email);
+
+ALTER TABLE tag
+  ADD FULLTEXT KEY ft_tag_name (name);
