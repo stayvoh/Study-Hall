@@ -8,7 +8,11 @@ class BaseController {
 
     protected function render(string $view, array $data = []): void {
         extract($data);
-        require __DIR__ . '/../views/' . $view . '.php';
+        $path = __DIR__ . '/../views/' . $view;
+        if (!str_ends_with($view, '.php')) {
+            $path .= '.php';
+        }
+        require $path;
     }
 }
 ?>

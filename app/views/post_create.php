@@ -39,6 +39,15 @@ $error = $error ?? null;
             <textarea class="form-control" name="body" rows="8" required></textarea>
           </div>
 
+          <div class="mb-3">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" name="tags" class="form-control"
+            placeholder="e.g., php, docker, mariadb"
+            value="<?= htmlspecialchars($post['tags_csv'] ?? '') ?>">
+            <div class="form-text">Short keywords like “php, docker”.</div>
+          </div>
+
+
           <div class="d-flex gap-2">
             <button class="btn btn-green" type="submit">Publish</button>
             <a class="btn btn-outline-secondary" href="/board?b=<?= (int)$boardId ?>">Cancel</a>
