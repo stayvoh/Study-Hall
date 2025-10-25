@@ -8,12 +8,7 @@
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">StudyHall</a>
-    <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-  </div>
-</nav>
+
 
 <section class="py-5 text-center">
   <div class="container">
@@ -68,6 +63,6 @@
     </a>
   </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

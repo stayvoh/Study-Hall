@@ -21,8 +21,10 @@ ALTER TABLE user_account
 -- Optional profile (safe to leave empty for now)
 CREATE TABLE IF NOT EXISTS user_profile (
   user_id   INT UNSIGNED NOT NULL PRIMARY KEY,
+  profile_picture LONGBLOB NULL,  -- binary image data
+  mime_type VARCHAR(100) NULL,  -- e.g. "image/png" or "image/jpeg"
   username  VARCHAR(50) NOT NULL,
-  bio       VARCHAR(200) NULL,
+  bio       VARCHAR(200) NULL,  
   CONSTRAINT fk_profile_user
     FOREIGN KEY (user_id) REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE,

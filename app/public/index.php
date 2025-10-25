@@ -11,6 +11,7 @@ require __DIR__ . '/../core/BaseController.php';
 
 // Models
 require __DIR__ . '/../models/User.php';
+require __DIR__ . '/../models/Profile.php';
 
 // Controllers
 require __DIR__ . '/../controllers/LoginController.php';
@@ -63,7 +64,11 @@ if ($uri === '' || $uri === 'login') {
     $controller = new LogoutController();
     $controller->index();
 
-} else {
+} elseif ($uri === 'profile/avatar') {
+    $controller = new ProfileController();
+    $controller->avatar();
+}
+else {
     http_response_code(404);
     echo "404 Not Found";
 }
