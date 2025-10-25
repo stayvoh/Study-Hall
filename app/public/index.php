@@ -11,6 +11,7 @@ require __DIR__ . '/../core/BaseController.php';
 
 // Models
 require __DIR__ . '/../models/User.php';
+require __DIR__ . '/../models/Profile.php';
 require __DIR__ . '/../models/Board.php';
 require __DIR__ . '/../models/Post.php';
 require __DIR__ . '/../models/Tag.php';     // NEW (for TagController, tag pages)
@@ -58,6 +59,27 @@ if ($uri === 'forgot') {
 
 if ($uri === 'reset') {
     $controller = new ResetPasswordController();
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $controller->reset();
+    } else {
+        $controller->showForm();
+    }
+
+} elseif ($uri === 'dashboard') {
+    $controller = new DashboardController();
+    $controller->index();
+
+} elseif ($uri === 'logout') {
+    $controller = new LogoutController();
+    $controller->index();
+
+} elseif ($uri === 'profile/avatar') {
+    $controller = new ProfileController();
+    $controller->avatar();
+}
+else {
+    http_response_code(404);
+    echo "404 Not Found";
     if (is_post()) $controller->reset(); else $controller->showForm();
     exit;
 }

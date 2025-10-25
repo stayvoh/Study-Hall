@@ -18,8 +18,33 @@
         <div class="card-body">
           <h4 class="card-title mb-4 text-center">Register</h4>
 
-          <form method="POST" action="/register">
+          <form method="POST" action="/register" enctype="multipart/form-data">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
+            <div class="mb-3">
+              <label for="userName" class="form-label">User Name</label>
+              <input type="text" id="userName" name="userName" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="bio" class="form-label">Bio (optional)</label>
+              <textarea id="bio" name="bio" class="form-control" maxlength="200"> </textarea>
+               <small id="bioCounter" class="form-text text-muted">0/200</small>
+            </div>
+                  <script>
+                      const bio = document.getElementById('bio');
+                      const counter = document.getElementById('bioCounter');
+                      const maxLength = bio.getAttribute('maxlength');
+                      bio.addEventListener('input', () => {
+                      const currentLength = bio.value.length;
+                       counter.textContent = `${currentLength}/${maxLength}`;
+                       });
+                    </script>
+            
+
+              <div class="mb-3">
+                <label class="form-label">Profile Picture (optional)</label>
+                <input class="form-control" type="file" name="profile_picture" accept="image/*">
+              </div>
+
             <div class="mb-3">
               <label for="email" class="form-label">Email address</label>
               <input type="email" id="email" name="email" class="form-control" required>
