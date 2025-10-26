@@ -22,5 +22,6 @@ class BaseController {
         require $path;
     }
     
+    }
 }
 ?>
