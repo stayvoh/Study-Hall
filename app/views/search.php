@@ -37,18 +37,7 @@ $next = (int)$page + 1;
 </head>
 <body class="bg-body">
 
-<nav class="navbar navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">Study Hall</a>
-    <div class="d-flex align-items-center gap-2">
-      <button id="themeToggle" class="btn btn-outline-light btn-sm" type="button" aria-label="Toggle theme">
-        <i class="bi bi-moon-stars" id="themeIcon" aria-hidden="true"></i>
-        <span class="ms-1 d-none d-sm-inline" id="themeLabel">Dark</span>
-      </button>
-      <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-    </div>
-  </div>
-</nav>
+
 
 <section class="py-4">
   <div class="container" style="max-width:1000px;">
@@ -196,6 +185,6 @@ $next = (int)$page + 1;
   toggleTagField();
 })();
 </script>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

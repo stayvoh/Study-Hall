@@ -11,13 +11,9 @@ class BaseController {
         $profileModel = new Profile($this->db);
         $data['currentUser'] = $profileModel->getProfileByUserId($_SESSION['uid']);
       require __DIR__ . "/../views/header.php";         
-    }               
+        }               
         extract($data);
       
-        require __DIR__ . '/../views/' . $view . '.php';
-   
-   
-   
    
         $path = __DIR__ . '/../views/' . $view;
         if (!str_ends_with($view, '.php')) {
