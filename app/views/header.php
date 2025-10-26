@@ -11,7 +11,12 @@ if (!isset($currentUser) && isset($_SESSION['uid'])) {
     <a class="navbar-brand" href="/dashboard">StudyHall</a>
 
     <div class="d-flex align-items-center">
+        <!--Toogle for light and dark-->
+        <button id="themeToggle" class="btn btn-outline-light btn-sm me-3" title="Toggle Theme">
+            <i id="themeIcon" class="bi bi-moon-stars"></i>
+        </button>
       <div class="dropdown">
+               
         <img 
           src="<?= $profilePicUrl ?>" 
           alt="Profile Picture" 

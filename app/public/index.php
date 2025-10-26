@@ -84,15 +84,6 @@ else {
     exit;
 }
 
-if ($uri === 'dashboard') {
-    (new DashboardController())->index();
-    exit;
-}
-
-if ($uri === 'logout') {
-    (new LogoutController())->index();
-    exit;
-}
 
 // ---- Boards (existing style) ----
 if ($uri === 'boards') {
@@ -155,5 +146,6 @@ if (preg_match('#^tag/([^/]+)$#', $uri, $m)) {
 }
 
 // --- 404 ---
-http_response_code(404);
-echo "404 Not Found";
+//http_response_code(404);
+//echo "404 Not Found";
+?>
