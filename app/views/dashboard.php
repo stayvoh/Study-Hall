@@ -80,54 +80,7 @@
 <?php endif; ?>
 
 <!-- Theme toggle logic -->
-<script>
-(function () {
-  const root = document.documentElement;
-  const btn  = document.getElementById('themeToggle');
-  const icon = document.getElementById('themeIcon');
-  const label= document.getElementById('themeLabel');
 
-  function setTheme(theme) {
-    root.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
-    document.cookie = "theme=" + theme + "; path=/; max-age=31536000";
-    updateUI(theme);
-  }
-
-  function updateUI(theme) {
-    if (!icon || !label) return;
-    if (theme === 'dark') {
-      icon.className = 'bi bi-sun';          // show sun in dark mode (tap to go light)
-      label.textContent = 'Light';
-    } else {
-      icon.className = 'bi bi-moon-stars';   // show moon in light mode (tap to go dark)
-      label.textContent = 'Dark';
-    }
-  }
-
-  // Initialize button state
-  const current = root.getAttribute('data-bs-theme') || 'light';
-  updateUI(current);
-
-  // Bind click
-  if (btn) {
-    btn.addEventListener('click', function () {
-      const next = (root.getAttribute('data-bs-theme') === 'dark') ? 'light' : 'dark';
-      setTheme(next);
-    });
-  }
-
-  // React to system changes if the user hasn’t chosen yet
-  try {
-    const stored = localStorage.getItem('theme');
-    if (!stored && window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        setTheme(e.matches ? 'dark' : 'light');
-      });
-    }
-  } catch (_) {}
-})();
-</script>
 
 </body>
 </html>
