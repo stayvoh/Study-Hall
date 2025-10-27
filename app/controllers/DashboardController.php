@@ -3,6 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../core/Database.php';
 
+/**
+ * Controller for the Dashboard view.
+ * - Shows recent posts (with authors and tags)
+ * - Optionally lists boards the current user follows
+ */
 class DashboardController extends BaseController
 {
     public function index(): void
@@ -12,7 +17,9 @@ class DashboardController extends BaseController
         $limit  = 20;
         $offset = ($page - 1) * $limit;
 
-        // recent posts + author + tags in one query
+        // =====================================================
+        // FETCH RECENT POSTS
+        // =====================================================
         $sql = "
             SELECT
                 p.id, p.title, p.body, p.created_at,
@@ -33,13 +40,15 @@ class DashboardController extends BaseController
         $stmt->execute();
         $rows = $stmt->fetchAll() ?: [];
 
-        // shape for the view
-        $posts = array_map(function($r){
+        // Shape data for the view (tags, excerpt)
+        $posts = array_map(function($r) {
             $tags = [];
             if (!empty($r['tag_blob'])) {
                 foreach (explode('|', $r['tag_blob']) as $pair) {
                     [$name, $slug] = array_pad(explode(':', $pair, 2), 2, '');
-                    if ($name !== '' && $slug !== '') $tags[] = ['name'=>$name, 'slug'=>$slug];
+                    if ($name !== '' && $slug !== '') {
+                        $tags[] = ['name' => $name, 'slug' => $slug];
+                    }
                 }
             }
             $r['tags']    = $tags;
@@ -47,8 +56,18 @@ class DashboardController extends BaseController
             return $r;
         }, $rows);
 
+        // =====================================================
+        // FETCH FOLLOWED BOARDS (if logged in)
+        // =====================================================
+        $userId = (int)($_SESSION['user_id'] ?? 0);
+        $followedBoards = $userId > 0 ? Board::followedByUser($userId) : [];
+
+        // =====================================================
+        // RENDER DASHBOARD
+        // =====================================================
         $this->render('dashboard', [
-            'posts' => $posts
+            'posts'          => $posts,
+            'followedBoards' => $followedBoards
         ]);
     }
 }

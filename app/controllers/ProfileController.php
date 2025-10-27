@@ -1,7 +1,10 @@
-<?php>
-class ProfileController extends BaseController {
+<?php
+declare(strict_types=1);
 
-    public function avatar($userId = null) {
+class ProfileController extends BaseController
+{
+    public function avatar($userId = null): void
+    {
         // If no ID specified, use logged-in user
         $userId = $userId ?? $_SESSION['uid'] ?? 0;
 
@@ -10,13 +13,13 @@ class ProfileController extends BaseController {
             exit('Unauthorized');
         }
 
-       
-        $stmt = $this->db->prepare("SELECT profile_picture, mime_type FROM user_profile WHERE user_id = :id");
+        $stmt = $this->db->prepare(
+            "SELECT profile_picture, mime_type FROM user_profile WHERE user_id = :id"
+        );
         $stmt->execute(['id' => $userId]);
         $profile = $stmt->fetch();
 
         if (!$profile || !$profile['profile_picture']) {
-        
             header('Content-Type: image/png');
             readfile('images/default-avatar.png');
             exit;
@@ -26,4 +29,3 @@ class ProfileController extends BaseController {
         echo $profile['profile_picture'];
     }
 }
-?>

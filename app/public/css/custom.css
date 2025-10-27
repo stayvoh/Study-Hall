@@ -47,3 +47,7 @@ a.login-link:hover {
     background-color: #5121fd;
     border-color: #5121fd;
 }
+/* Navbar background */
+.bg-orange {
+    background-color: #fd5121 !important; /* same orange as .btn-orange */
+}

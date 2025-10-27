@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-// Composer autoloader
+// Autoload dependencies
 require __DIR__ . '/../vendor/autoload.php';
 
 // Core
@@ -14,8 +14,8 @@ require __DIR__ . '/../models/User.php';
 require __DIR__ . '/../models/Profile.php';
 require __DIR__ . '/../models/Board.php';
 require __DIR__ . '/../models/Post.php';
-require __DIR__ . '/../models/Tag.php';     // NEW (for TagController, tag pages)
-require __DIR__ . '/../models/Search.php';  // Optional (if your SearchController uses it)
+require __DIR__ . '/../models/Tag.php';
+require __DIR__ . '/../models/Search.php';
 
 // Controllers
 require __DIR__ . '/../controllers/LoginController.php';
@@ -24,115 +24,125 @@ require __DIR__ . '/../controllers/ForgotPasswordController.php';
 require __DIR__ . '/../controllers/ResetPasswordController.php';
 require __DIR__ . '/../controllers/DashboardController.php';
 require __DIR__ . '/../controllers/LogoutController.php';
+require __DIR__ . '/../controllers/ProfileController.php';
 require __DIR__ . '/../controllers/BoardController.php';
 require __DIR__ . '/../controllers/PostController.php';
-require __DIR__ . '/../controllers/SearchController.php'; // NEW
-require __DIR__ . '/../controllers/TagController.php';    // NEW
+require __DIR__ . '/../controllers/SearchController.php';
+require __DIR__ . '/../controllers/TagController.php';
 
-// Normalize URI (strip query + leading/trailing slashes)
-$uri = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
-
-// Convenience helpers
+// --- Utilities ---
+$uri    = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 function is_post(): bool { return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'; }
 
-// --- Routes ---
+// =====================================================
+// AUTHENTICATION ROUTES
+// =====================================================
 
-// Home → Login (or Dashboard if you later add auth checks here)
+// Home → Login page (or redirect to dashboard later)
 if ($uri === '' || $uri === 'login') {
-    $controller = new LoginController();
-    if (is_post()) $controller->login(); else $controller->showForm();
+    $c = new LoginController();
+    is_post() ? $c->login() : $c->showForm();
     exit;
 }
 
 if ($uri === 'register') {
-    $controller = new RegisterController();
-    if (is_post()) $controller->register(); else $controller->showForm();
+    $c = new RegisterController();
+    is_post() ? $c->register() : $c->showForm();
     exit;
 }
 
 if ($uri === 'forgot') {
-    $controller = new ForgotPasswordController();
-    if (is_post()) $controller->sendReset(); else $controller->showForm();
+    $c = new ForgotPasswordController();
+    is_post() ? $c->sendReset() : $c->showForm();
     exit;
 }
 
 if ($uri === 'reset') {
-    $controller = new ResetPasswordController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->reset();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'dashboard') {
-    $controller = new DashboardController();
-    $controller->index();
-
-} elseif ($uri === 'logout') {
-    $controller = new LogoutController();
-    $controller->index();
-
-} elseif ($uri === 'profile/avatar') {
-    $controller = new ProfileController();
-    $controller->avatar();
-}
-else {
-    http_response_code(404);
-    echo "404 Not Found";
-    if (is_post()) $controller->reset(); else $controller->showForm();
+    $c = new ResetPasswordController();
+    is_post() ? $c->reset() : $c->showForm();
     exit;
 }
 
+if ($uri === 'logout') {
+    (new LogoutController())->index();
+    exit;
+}
 
-// ---- Boards (existing style) ----
+// =====================================================
+// DASHBOARD / PROFILE
+// =====================================================
+
+if ($uri === 'dashboard') {
+    (new DashboardController())->index();
+    exit;
+}
+
+if ($uri === 'profile/avatar') {
+    (new ProfileController())->avatar();
+    exit;
+}
+
+// =====================================================
+// BOARDS
+// =====================================================
+
 if ($uri === 'boards') {
     (new BoardController())->index();
     exit;
 }
 
-if ($uri === 'board') { // /board?b=123&page=2
-    $controller = new BoardController();
+if ($uri === 'board') { // e.g. /board?b=123&page=2
+    $c    = new BoardController();
     $id   = (int)($_GET['b'] ?? 0);
     $page = (int)($_GET['page'] ?? 1);
-    $controller->show($id, $page);
+    $c->show($id, $page);
     exit;
 }
 
 if ($uri === 'board/create') {
-    $controller = new BoardController();
-    if (is_post()) $controller->create(); else $controller->createForm();
+    $c = new BoardController();
+    is_post() ? $c->create() : $c->createForm();
     exit;
 }
 
-// ---- Posts ----
-if ($uri === 'post') { // /post?id=123
-    $controller = new PostController();
+// =====================================================
+// POSTS
+// =====================================================
+
+if ($uri === 'post') { // e.g. /post?id=123
+    $c  = new PostController();
     $id = (int)($_GET['id'] ?? 0);
-    if (is_post()) $controller->comment($id); else $controller->show($id);
+    is_post() ? $c->comment($id) : $c->show($id);
     exit;
 }
 
-if ($uri === 'post/create') { // /post/create?b=123
-    $controller = new PostController();
+if ($uri === 'post/create') { // e.g. /post/create?b=123
+    $c       = new PostController();
     $boardId = (int)($_GET['b'] ?? 0);
-    if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
+    is_post() ? $c->create($boardId) : $c->createForm($boardId);
     exit;
 }
 
-// ---- Search (new) ----
-if ($uri === 'search') {            // /search?q=...&type=posts|users|tags[&tag=slug]
+// =====================================================
+// SEARCH
+// =====================================================
+
+if ($uri === 'search') {
     (new SearchController())->index();
     exit;
 }
 
-// ---- Tags (new) ----
-if ($uri === 'tags') {              // /tags
+// =====================================================
+// TAGS
+// =====================================================
+
+if ($uri === 'tags') {
     (new TagController())->index();
     exit;
 }
 
-if ($uri === 'tag') {               // fallback: /tag?slug=php
+if ($uri === 'tag') { // fallback: /tag?slug=php
     $slug = (string)($_GET['slug'] ?? '');
     (new TagController())->show($slug);
     exit;
@@ -140,12 +150,13 @@ if ($uri === 'tag') {               // fallback: /tag?slug=php
 
 // Pretty route: /tag/{slug}
 if (preg_match('#^tag/([^/]+)$#', $uri, $m)) {
-    $slug = $m[1];
-    (new TagController())->show($slug);
+    (new TagController())->show($m[1]);
     exit;
 }
 
-// --- 404 ---
-//http_response_code(404);
-//echo "404 Not Found";
-?>
+// =====================================================
+// 404 HANDLER
+// =====================================================
+http_response_code(404);
+echo "404 Not Found";
+exit;

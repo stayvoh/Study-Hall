@@ -1,10 +1,14 @@
--- Study Hall — core auth schema (InnoDB, utf8mb4)
+-- =====================================================
+-- DATABASE INIT
+-- =====================================================
 CREATE DATABASE IF NOT EXISTS studyhall
   CHARACTER SET utf8mb4
   COLLATE utf8mb4_unicode_ci;
 USE studyhall;
 
--- Users
+-- =====================================================
+-- USERS & PROFILES
+-- =====================================================
 CREATE TABLE IF NOT EXISTS user_account (
   id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   email          VARCHAR(255) NOT NULL,
@@ -15,23 +19,24 @@ CREATE TABLE IF NOT EXISTS user_account (
 ) ENGINE=InnoDB;
 
 ALTER TABLE user_account
-  ADD remember_token VARCHAR(64) NULL,
-  ADD remember_expiry DATETIME NULL;
+  ADD remember_token  VARCHAR(64) NULL,
+  ADD remember_expiry DATETIME NULL,
+  ADD INDEX idx_user_email (email);
 
--- Optional profile (safe to leave empty for now)
 CREATE TABLE IF NOT EXISTS user_profile (
   user_id   INT UNSIGNED NOT NULL PRIMARY KEY,
-  profile_picture LONGBLOB NULL,  -- binary image data
-  mime_type VARCHAR(100) NULL,  -- e.g. "image/png" or "image/jpeg"
+  profile_picture LONGBLOB NULL,
+  mime_type VARCHAR(100) NULL,
   username  VARCHAR(50) NOT NULL,
-  bio       VARCHAR(200) NULL,  
-  CONSTRAINT fk_profile_user
-    FOREIGN KEY (user_id) REFERENCES user_account(id)
+  bio       VARCHAR(200) NULL,
+  CONSTRAINT fk_profile_user FOREIGN KEY (user_id) REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
   UNIQUE KEY uq_profile_username (username)
 ) ENGINE=InnoDB;
 
--- Boards (can be per-course later; course_id nullable for general boards)
+-- =====================================================
+-- BOARDS & POSTS
+-- =====================================================
 CREATE TABLE IF NOT EXISTS board (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   course_id   INT UNSIGNED NULL,
@@ -41,7 +46,6 @@ CREATE TABLE IF NOT EXISTS board (
   UNIQUE KEY uq_board_course_name (course_id, name)
 ) ENGINE=InnoDB;
 
--- Posts (threads)
 CREATE TABLE IF NOT EXISTS post (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   board_id    INT UNSIGNED NOT NULL,
@@ -52,10 +56,13 @@ CREATE TABLE IF NOT EXISTS post (
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX ix_board_created (board_id, created_at),
-  FULLTEXT KEY ft_post (title, body)
+  FULLTEXT KEY ft_post_title_body (title, body),
+  CONSTRAINT fk_post_board FOREIGN KEY (board_id) REFERENCES board(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_post_user  FOREIGN KEY (user_id)  REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Comments (replies)
 CREATE TABLE IF NOT EXISTS comment (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   post_id     INT UNSIGNED NOT NULL,
@@ -64,29 +71,26 @@ CREATE TABLE IF NOT EXISTS comment (
   is_answer   TINYINT(1) NOT NULL DEFAULT 0,
   is_accepted TINYINT(1) NOT NULL DEFAULT 0,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  INDEX ix_post_created (post_id, created_at)
+  INDEX ix_post_created (post_id, created_at),
+  CONSTRAINT fk_comment_post FOREIGN KEY (post_id) REFERENCES post(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Forgot password
-CREATE TABLE password_reset (
-  user_id INT UNSIGNED NOT NULL,
-  token VARCHAR(64) NOT NULL,
-  expires_at DATETIME NOT NULL,
-  PRIMARY KEY (user_id),
-  FOREIGN KEY (user_id) REFERENCES user_account(id) ON DELETE CASCADE
-);
-
--- Tags
+-- =====================================================
+-- TAGS
+-- =====================================================
 CREATE TABLE IF NOT EXISTS tag (
   id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name        VARCHAR(80) NOT NULL,
   slug        VARCHAR(100) NOT NULL,
   created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_tag_name (name),
-  UNIQUE KEY uq_tag_slug (slug)
+  UNIQUE KEY uq_tag_slug (slug),
+  FULLTEXT KEY ft_tag_name (name)
 ) ENGINE=InnoDB;
 
--- Post <-> Tag (many-to-many)
 CREATE TABLE IF NOT EXISTS post_tag (
   post_id INT UNSIGNED NOT NULL,
   tag_id  INT UNSIGNED NOT NULL,
@@ -97,24 +101,28 @@ CREATE TABLE IF NOT EXISTS post_tag (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Foreign keys
-ALTER TABLE post
-  ADD CONSTRAINT fk_post_board  FOREIGN KEY (board_id) REFERENCES board(id)
+-- =====================================================
+-- USER ↔ BOARD RELATIONSHIPS
+-- =====================================================
+-- Tracks which boards a user follows
+CREATE TABLE IF NOT EXISTS user_follow_board (
+  user_id  INT UNSIGNED NOT NULL,
+  board_id INT UNSIGNED NOT NULL,
+  followed_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, board_id),
+  CONSTRAINT fk_ufb_user  FOREIGN KEY (user_id)  REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_post_user   FOREIGN KEY (user_id)  REFERENCES user_account(id)
-    ON DELETE CASCADE ON UPDATE CASCADE;
+  CONSTRAINT fk_ufb_board FOREIGN KEY (board_id) REFERENCES board(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
-ALTER TABLE comment
-  ADD CONSTRAINT fk_comment_post FOREIGN KEY (post_id) REFERENCES post(id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES user_account(id)
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE post
-  ADD FULLTEXT KEY ft_post_title_body (title, body);
-
-ALTER TABLE user_account
-  ADD INDEX idx_user_email (email);
-
-ALTER TABLE tag
-  ADD FULLTEXT KEY ft_tag_name (name);
+-- =====================================================
+-- PASSWORD RESET TOKENS
+-- =====================================================
+CREATE TABLE IF NOT EXISTS password_reset (
+  user_id    INT UNSIGNED NOT NULL PRIMARY KEY,
+  token      VARCHAR(64) NOT NULL,
+  expires_at DATETIME NOT NULL,
+  CONSTRAINT fk_pwreset_user FOREIGN KEY (user_id) REFERENCES user_account(id)
+    ON DELETE CASCADE
+);
