@@ -17,6 +17,7 @@ class Database {
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ];
             self::$pdo = new PDO($dsn, $user, $pass, $options);
+            
         }
         return self::$pdo;
     }

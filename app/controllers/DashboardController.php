@@ -1,42 +1,47 @@
 <?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../core/Database.php';
+
 class DashboardController extends BaseController
 {
-    public function index()
-    {
-        require_login();
-
-        $feed = $_GET['feed'] ?? 'all';
-        $userId = $_SESSION['uid'];
-
-        if ($feed === 'following') {
-            // TODO: adjust this when you have a "user_follow_board" table
-            // For now, just placeholder query to simulate "following"
-            $stmt = $this->db->prepare("
-                SELECT p.id, p.title, p.body, p.created_at, u.email
-                FROM post p
-                JOIN user_account u ON u.id = p.user_id
-                ORDER BY p.created_at DESC
-                LIMIT 10
-            ");
-            $stmt->execute();
-            $activities = $stmt->fetchAll();
-        } else {
-            // Global feed: recent posts from all boards
-            $stmt = $this->db->prepare("
-                SELECT p.id, p.title, p.body, p.created_at, u.email
-                FROM post p
-                JOIN user_account u ON u.id = p.user_id
-                ORDER BY p.created_at DESC
-                LIMIT 10
-            ");
-            $stmt->execute();
-            $activities = $stmt->fetchAll();
-        }
-
+    public function index(): void
+{
+    $tab = ($_GET['tab'] ?? 'all');
+    $uid = (int)($_SESSION['uid'] ?? 0);
+    if ($tab === 'following' && $uid > 0) {
+        $boards = BoardFollow::boardsForUser($uid);
         $this->render('dashboard', [
-            'feed' => $feed,
-            'activities' => $activities,
+            'boards' => $boards,
+            'bq'     => $bq,
+            'tab'    => 'following',
         ]);
+        return;
     }
+
+    $db   = Database::getConnection();
+    $bq   = trim((string)($_GET['bq'] ?? ''));
+    $sql  = "
+        SELECT b.id, b.name, b.description, b.created_at, COUNT(p.id) AS post_count
+        FROM board b
+        LEFT JOIN post p ON p.board_id = b.id
+    ";
+    $where = '';
+    if ($bq !== '') {
+        $where = "WHERE b.name LIKE :q OR b.description LIKE :q";
+    }
+    $sql .= " $where GROUP BY b.id, b.name, b.description, b.created_at
+              ORDER BY b.created_at DESC, b.id DESC";
+
+    $stmt = $db->prepare($sql);
+    if ($bq !== '') $stmt->bindValue(':q', "%$bq%", PDO::PARAM_STR);
+    $stmt->execute();
+    $boards = $stmt->fetchAll() ?: [];
+
+    // No posts on the dashboard anymore
+    $this->render('dashboard', [
+        'boards' => $boards,
+        'bq'     => $bq,
+    ]);
 }
-?>
+}

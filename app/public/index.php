@@ -1,69 +1,183 @@
 <?php
 declare(strict_types=1);
 
-// Composer autoloader (for PHPMailer and any future libraries)
+// -------------------------------------------------------------
+// Autoload + Core
+// -------------------------------------------------------------
 require __DIR__ . '/../vendor/autoload.php';
-
-// Core
 require __DIR__ . '/../core/Session.php';
 require __DIR__ . '/../core/Database.php';
 require __DIR__ . '/../core/BaseController.php';
 
+// -------------------------------------------------------------
 // Models
+// -------------------------------------------------------------
 require __DIR__ . '/../models/User.php';
+require __DIR__ . '/../models/Profile.php';
+require __DIR__ . '/../models/Board.php';
+require __DIR__ . '/../models/Post.php';
+require __DIR__ . '/../models/Tag.php';
+require __DIR__ . '/../models/Search.php';
+require __DIR__ . '/../models/BoardFollow.php';
 
+// -------------------------------------------------------------
 // Controllers
+// -------------------------------------------------------------
 require __DIR__ . '/../controllers/LoginController.php';
 require __DIR__ . '/../controllers/RegisterController.php';
 require __DIR__ . '/../controllers/ForgotPasswordController.php';
 require __DIR__ . '/../controllers/ResetPasswordController.php';
 require __DIR__ . '/../controllers/DashboardController.php';
 require __DIR__ . '/../controllers/LogoutController.php';
+require __DIR__ . '/../controllers/ProfileController.php';
+require __DIR__ . '/../controllers/BoardController.php';
+require __DIR__ . '/../controllers/PostController.php';
+require __DIR__ . '/../controllers/SearchController.php';
+require __DIR__ . '/../controllers/TagController.php';
 
-// Simple router
-$uri = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+// -------------------------------------------------------------
+// Helpers
+// -------------------------------------------------------------
+$uri = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+function is_post(): bool { return ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'POST'; }
 
+// -------------------------------------------------------------
+// Routes
+// -------------------------------------------------------------
+
+// --- Auth + Account Pages ---
 if ($uri === '' || $uri === 'login') {
     $controller = new LoginController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->login();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'register') {
-    $controller = new RegisterController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->register();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'forgot') {
-    $controller = new ForgotPasswordController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->sendReset();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'reset') {
-    $controller = new ResetPasswordController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->reset();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'dashboard') {
-    $controller = new DashboardController();
-    $controller->index();
-
-} elseif ($uri === 'logout') {
-    $controller = new LogoutController();
-    $controller->index();
-
-} else {
-    http_response_code(404);
-    echo "404 Not Found";
+    if (is_post()) $controller->login(); else $controller->showForm();
+    exit;
 }
+
+elseif ($uri === 'register') {
+    $controller = new RegisterController();
+    if (is_post()) $controller->register(); else $controller->showForm();
+    exit;
+}
+
+elseif ($uri === 'forgot') {
+    $controller = new ForgotPasswordController();
+    if (is_post()) $controller->sendReset(); else $controller->showForm();
+    exit;
+}
+
+elseif ($uri === 'reset') {
+    $controller = new ResetPasswordController();
+    if (is_post()) $controller->reset(); else $controller->showForm();
+    exit;
+}
+
+// --- Dashboard / Logout ---
+elseif ($uri === 'dashboard') {
+    (new DashboardController())->index();
+    exit;
+}
+
+elseif ($uri === 'logout') {
+    (new LogoutController())->index();
+    exit;
+}
+
+// --- Profile Routes ---
+elseif ($uri === 'profile') {
+    (new ProfileController())->profile();
+    exit;
+}
+
+elseif ($uri === 'profile/avatar') {
+    (new ProfileController())->avatar();
+    exit;
+}
+
+elseif ($uri === 'profile/edit') {
+    (new ProfileController())->edit();
+    exit;
+}
+
+elseif ($uri === 'profile/update') {
+    if (is_post()) (new ProfileController())->update();
+    exit;
+}
+
+// --- Boards ---
+elseif ($uri === 'boards') {
+    (new BoardController())->index();
+    exit;
+}
+
+elseif ($uri === 'board') { // /board?b=123&page=2
+    $controller = new BoardController();
+    $id   = (int)($_GET['id'] ?? ($_GET['b'] ?? 0));
+    $page = (int)($_GET['page'] ?? 1);
+    $controller->show($id, $page);
+    exit;
+}
+
+elseif ($uri === 'board/create') {
+    $controller = new BoardController();
+    if (is_post()) $controller->create(); else $controller->createForm();
+    exit;
+}
+
+// --- Posts ---
+elseif ($uri === 'post') { // /post?id=123
+    $controller = new PostController();
+    $id = (int)($_GET['id'] ?? 0);
+    if (is_post()) $controller->comment($id); else $controller->show($id);
+    exit;
+}
+
+elseif ($uri === 'post/create') { // /post/create?b=123
+    $controller = new PostController();
+    $boardId = (int)($_GET['b'] ?? 0);
+    if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
+    exit;
+}
+
+// follow
+elseif (preg_match('#^boards/(\d+)/(follow|unfollow)$#', $uri, $m)) {
+    $boardId = (int)$m[1];
+    $action  = $m[2]; // 'follow' or 'unfollow'
+
+    if (!is_post()) { http_response_code(405); echo 'Method Not Allowed'; exit; }
+
+    $controller = new BoardController();
+    if ($action === 'follow')   { $controller->follow($boardId); }
+    else                        { $controller->unfollow($boardId); }
+    exit;
+}
+
+// --- Search ---
+elseif ($uri === 'search') {
+    (new SearchController())->index();
+    exit;
+}
+// --- Tags ---
+elseif ($uri === 'tags') {
+    (new TagController())->index();
+    exit;
+}
+
+elseif ($uri === 'tag') { // /tag?slug=php
+    $slug = (string)($_GET['slug'] ?? '');
+    (new TagController())->show($slug);
+    exit;
+}
+
+// Pretty route: /tag/{slug}
+elseif (preg_match('#^tag/([^/]+)$#', $uri, $m)) {
+    $slug = $m[1];
+    (new TagController())->show($slug);
+    exit;
+}
+
+// -------------------------------------------------------------
+// 404 Fallback
+// -------------------------------------------------------------
+http_response_code(404);
+echo "404 Not Found";
+exit;

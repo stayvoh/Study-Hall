@@ -2,72 +2,89 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dashboard</title>
+  <title>Dashboard · Study Hall</title>
+  <?php
+  $themeInit = __DIR__ . '/theme-init.php';
+  if (is_file($themeInit)) include $themeInit;
+  ?>
+
+  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons (for sun/moon) -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="bg-body"><!-- bg-body adapts with theme -->
 
-<nav class="navbar navbar-dark bg-dark">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">StudyHall</a>
-    <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-  </div>
-</nav>
-
+<?php
+  $hdr = __DIR__ . '/header.php';   // adjust path if your header lives in /views/partials/header.php
+  if (is_file($hdr)) include $hdr;
+?>
 <section class="py-5 text-center">
   <div class="container">
     <h1 class="display-5 fw-semibold mb-2">Welcome to Study Hall</h1>
     <p class="lead text-muted mb-4">Learn, Collaborate, Build Together</p>
 
-    <form class="d-flex justify-content-center" method="GET" action="/search" style="max-width:720px;margin:0 auto;">
-      <input class="form-control form-control-lg me-2" type="search"
-             name="q" placeholder="Search discussions, projects, or people" aria-label="Search">
-      <button class="btn btn-primary btn-lg" type="submit">Search</button>
+    <!-- Unified Search -->
+    <form class="row g-2 justify-content-center" method="GET" action="/search" style="max-width:900px;margin:0 auto;">
+      <div class="col-12 col-md-6">
+        <input class="form-control form-control-lg me-2" type="search"
+               name="q" placeholder="Search posts, users, or tags…" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+      </div>
+      <div class="col-6 col-md-2">
+        <?php $type = $_GET['type'] ?? 'posts'; ?>
+        <select class="form-select form-select-lg" name="type" aria-label="Result type">
+          <option value="posts" <?= $type==='posts'?'selected':''; ?>>Posts</option>
+          <option value="users" <?= $type==='users'?'selected':''; ?>>Users</option>
+          <option value="tags"  <?= $type==='tags' ?'selected':''; ?>>Tags</option>
+        </select>
+      </div>
+      <div class="col-6 col-md-1 d-grid">
+        <button class="btn btn-primary btn-lg" type="submit">Search</button>
+      </div>
     </form>
   </div>
 </section>
 
-<div class="container mb-5" style="max-width: 900px;">
+<!-- Boards section -->
+<?php if (!empty($boards) && is_array($boards)): ?>
+<div class="container mb-4" style="max-width: 1000px;">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">Activity Feed</h4>
-
-    <!-- Toggle: All vs Following -->
-    <ul class="nav nav-pills">
-      <li class="nav-item">
-        <a class="nav-link active" href="/dashboard?feed=all">All</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" href="/dashboard?feed=following">Following</a>
-      </li>
-    </ul>
+    <h4 class="mb-0">Boards</h4>
   </div>
 
-  <div class="list-group shadow-sm">
-    <!-- placeholders; we’ll wire real data next -->
-    <a href="#" class="list-group-item list-group-item-action">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1">Question on Lecture 3</h6>
-        <small class="text-muted">1 hour ago</small>
+  <div class="row g-3">
+    <?php foreach ($boards as $b): ?>
+      <div class="col-12 col-md-6">
+        <a class="card text-decoration-none h-100" href="/board?id=<?= (int)$b['id'] ?>">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="card-title mb-0"><?= htmlspecialchars($b['name']) ?></h6>
+              <?php if (isset($b['post_count'])): ?>
+                <span class="badge text-bg-light"><?= (int)$b['post_count'] ?> posts</span>
+              <?php endif; ?>
+            </div>
+            <?php if (!empty($b['description'])): ?>
+              <p class="card-text text-muted mt-2 mb-0"><?= htmlspecialchars($b['description']) ?></p>
+            <?php endif; ?>
+          </div>
+        </a>
       </div>
-      <p class="mb-1 text-muted">Why does this work?</p>
-    </a>
-    <a href="#" class="list-group-item list-group-item-action">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1">Project Idea</h6>
-        <small class="text-muted">1 day ago</small>
-      </div>
-      <p class="mb-1 text-muted">Looking for teammate skilled in JS.</p>
-    </a>
-    <a href="#" class="list-group-item list-group-item-action">
-      <div class="d-flex w-100 justify-content-between">
-        <h6 class="mb-1">Lost and Found Web App</h6>
-        <small class="text-muted">1 week ago</small>
-      </div>
-      <p class="mb-1 text-muted">New updates pushed to repo.</p>
-    </a>
+    <?php endforeach; ?>
   </div>
 </div>
+<?php else: ?>
+  <div class="container mb-5" style="max-width: 1000px;">
+    <div class="alert alert-light border">No boards found.</div>
+  </div>
+<?php endif; ?>
+
+<!-- Theme toggle logic -->
+<!-- Bootstrap JS Bundle (includes Popper) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
 
 </body>
 </html>
