@@ -125,24 +125,20 @@ CREATE TABLE IF NOT EXISTS post_tag (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
--- Foreign keys
-ALTER TABLE post
-  ADD CONSTRAINT fk_post_board  FOREIGN KEY (board_id) REFERENCES board(id)
+-- Users can follow boards (many-to-many)
+CREATE TABLE IF NOT EXISTS board_follow (
+  user_id  INT UNSIGNED NOT NULL,
+  board_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id, board_id),
+  CONSTRAINT fk_board_follow_user  FOREIGN KEY (user_id)  REFERENCES user_account(id)
     ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_post_user   FOREIGN KEY (user_id)  REFERENCES user_account(id)
-    ON DELETE CASCADE ON UPDATE CASCADE;
+  CONSTRAINT fk_board_follow_board FOREIGN KEY (board_id) REFERENCES board(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
 
-ALTER TABLE comment
-  ADD CONSTRAINT fk_comment_post FOREIGN KEY (post_id) REFERENCES post(id)
-    ON DELETE CASCADE ON UPDATE CASCADE,
-  ADD CONSTRAINT fk_comment_user FOREIGN KEY (user_id) REFERENCES user_account(id)
-    ON DELETE CASCADE ON UPDATE CASCADE;
-
-ALTER TABLE post
-  ADD FULLTEXT KEY ft_post_title_body (title, body);
-
-ALTER TABLE user_account
-  ADD INDEX idx_user_email (email);
+CREATE INDEX idx_board_follow_user  ON board_follow (user_id);
+CREATE INDEX idx_board_follow_board ON board_follow (board_id);
 
 ALTER TABLE tag
   ADD FULLTEXT KEY ft_tag_name (name);

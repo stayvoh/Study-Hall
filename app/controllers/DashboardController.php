@@ -7,6 +7,18 @@ class DashboardController extends BaseController
 {
     public function index(): void
 {
+    $tab = ($_GET['tab'] ?? 'all');
+    $uid = (int)($_SESSION['uid'] ?? 0);
+    if ($tab === 'following' && $uid > 0) {
+        $boards = BoardFollow::boardsForUser($uid);
+        $this->render('dashboard', [
+            'boards' => $boards,
+            'bq'     => $bq,
+            'tab'    => 'following',
+        ]);
+        return;
+    }
+
     $db   = Database::getConnection();
     $bq   = trim((string)($_GET['bq'] ?? ''));
     $sql  = "

@@ -54,4 +54,11 @@ class Board
         $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public static function followersCount(int $boardId): int {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM board_follow WHERE board_id = ?");
+        $stmt->execute([$boardId]);
+        return (int)$stmt->fetchColumn();
+    }
 }

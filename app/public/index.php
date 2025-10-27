@@ -18,6 +18,7 @@ require __DIR__ . '/../models/Board.php';
 require __DIR__ . '/../models/Post.php';
 require __DIR__ . '/../models/Tag.php';
 require __DIR__ . '/../models/Search.php';
+require __DIR__ . '/../models/BoardFollow.php';
 
 // -------------------------------------------------------------
 // Controllers
@@ -134,6 +135,19 @@ elseif ($uri === 'post/create') { // /post/create?b=123
     $controller = new PostController();
     $boardId = (int)($_GET['b'] ?? 0);
     if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
+    exit;
+}
+
+// follow
+elseif (preg_match('#^boards/(\d+)/(follow|unfollow)$#', $uri, $m)) {
+    $boardId = (int)$m[1];
+    $action  = $m[2]; // 'follow' or 'unfollow'
+
+    if (!is_post()) { http_response_code(405); echo 'Method Not Allowed'; exit; }
+
+    $controller = new BoardController();
+    if ($action === 'follow')   { $controller->follow($boardId); }
+    else                        { $controller->unfollow($boardId); }
     exit;
 }
 

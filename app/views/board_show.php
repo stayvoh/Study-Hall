@@ -36,7 +36,7 @@ $sql = "
         COALESCE(up.username, ua.email) AS author,
         GROUP_CONCAT(DISTINCT CONCAT(t.name, ':', t.slug) SEPARATOR '|') AS tag_blob
     FROM post p
-    JOIN user_account ua ON ua.id = p.user_id
+    JOIN user_account ua ON ua.id = p.created_by
     LEFT JOIN user_profile up ON up.user_id = ua.id
     LEFT JOIN post_tag pt ON pt.post_id = p.id
     LEFT JOIN tag t       ON t.id = pt.tag_id
@@ -72,6 +72,15 @@ $build = function(int $n) {
     return '/board_show.php?' . http_build_query($q);
 };
 
+// === FOLLOWING LOGIC ===
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+require_once __DIR__ . '/../models/BoardFollow.php';
+require_once __DIR__ . '/../models/User.php';
+
+$uid = isset($_SESSION['uid']) ? (int)$_SESSION['uid'] : 0;
+$isFollowing   = $uid ? BoardFollow::isFollowing($uid, $boardId) : false;
+$followerCount = BoardFollow::followersCount($boardId);
+
 // ===== View =====
 ?>
 <!DOCTYPE html>
@@ -96,12 +105,29 @@ $build = function(int $n) {
 <section class="py-4">
   <div class="container" style="max-width: 1000px;">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h3 class="mb-0"><?= htmlspecialchars($board['name']) ?></h3>
-      <div>
+      <div class="d-flex align-items-center gap-3">
+        <h3 class="mb-0"><?= htmlspecialchars($board['name']) ?></h3>
+        <span class="badge text-bg-light border" title="Followers">
+          <i class="bi bi-people me-1"></i><?= (int)$followerCount ?>
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <?php if ($uid): ?>
+          <form method="post" action="/boards/<?= (int)$board['id'] ?>/<?= $isFollowing ? 'unfollow' : 'follow' ?>">
+            <button type="submit"
+                    class="btn btn-sm <?= $isFollowing ? 'btn-outline-danger' : 'btn-outline-primary' ?>">
+              <i class="bi <?= $isFollowing ? 'bi-heartbreak' : 'bi-heart' ?>"></i>
+              <?= $isFollowing ? 'Unfollow' : 'Follow' ?>
+            </button>
+          </form>
+        <?php endif; ?>
+
         <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back to boards</a>
         <a class="btn btn-sm btn-primary" href="/post_create.php?board=<?= (int)$board['id'] ?>">New post</a>
       </div>
     </div>
+
     <?php if (!empty($board['description'])): ?>
       <p class="text-muted mb-4"><?= htmlspecialchars($board['description']) ?></p>
     <?php endif; ?>
@@ -130,7 +156,6 @@ $build = function(int $n) {
         <?php endforeach; ?>
       </div>
       <?php
-        $page = max(1, (int)($_GET['page'] ?? 1));
         $prev = max(1, $page - 1);
         $next = $page + 1;
       ?>
