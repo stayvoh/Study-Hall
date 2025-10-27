@@ -28,7 +28,7 @@ $excludeHeader = [
 
     <?php if (!in_array($currentPath, $excludeHeader, true)): ?>
       <!-- Show navbar brand and profile dropdown on pages NOT excluded -->
-      <a class="navbar-brand" href="/dashboard">StudyHall</a>
+      <a class="navbar-brand" href="/dashboard">Study Hall</a>
 
       <div class="d-flex align-items-center">
         <?php if (strpos($currentPath, 'profile') !== 0): ?>
