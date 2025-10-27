@@ -43,109 +43,79 @@ if ($uri === '' || $uri === 'login') {
     $controller = new LoginController();
     if (is_post()) $controller->login(); else $controller->showForm();
     exit;
-}
-
-if ($uri === 'register') {
+} elseif ($uri === 'register') {
     $controller = new RegisterController();
     if (is_post()) $controller->register(); else $controller->showForm();
     exit;
-}
-
-if ($uri === 'forgot') {
+} elseif ($uri === 'forgot') {
     $controller = new ForgotPasswordController();
     if (is_post()) $controller->sendReset(); else $controller->showForm();
     exit;
-}
-
-if ($uri === 'reset') {
+} elseif ($uri === 'reset') {
     $controller = new ResetPasswordController();
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $controller->reset();
-    } else {
-        $controller->showForm();
-    }
-
-} elseif ($uri === 'dashboard') {
-    $controller = new DashboardController();
-    $controller->index();
-
-} elseif ($uri === 'logout') {
-    $controller = new LogoutController();
-    $controller->index();
-
-} elseif ($uri === 'profile/avatar') {
-    $controller = new ProfileController();
-    $controller->avatar();
-}
-else {
-    http_response_code(404);
-    echo "404 Not Found";
     if (is_post()) $controller->reset(); else $controller->showForm();
+    exit;
+} elseif ($uri === 'dashboard') {
+    (new DashboardController())->index();
+    exit;
+} elseif ($uri === 'logout') {
+    (new LogoutController())->index();
+    exit;
+} elseif ($uri === 'profile/avatar') {
+    (new ProfileController())->avatar();
     exit;
 }
 
-
-// ---- Boards (existing style) ----
+/* -------- Boards -------- */
 if ($uri === 'boards') {
     (new BoardController())->index();
     exit;
-}
-
-if ($uri === 'board') { // /board?b=123&page=2
+} elseif ($uri === 'board') { // supports /board?id=123 OR /board?b=123
     $controller = new BoardController();
-    $id   = (int)($_GET['b'] ?? 0);
+    $id   = (int)($_GET['id'] ?? ($_GET['b'] ?? 0));
     $page = (int)($_GET['page'] ?? 1);
     $controller->show($id, $page);
     exit;
-}
-
-if ($uri === 'board/create') {
+} elseif ($uri === 'board/create') {
     $controller = new BoardController();
     if (is_post()) $controller->create(); else $controller->createForm();
     exit;
 }
 
-// ---- Posts ----
+/* -------- Posts -------- */
 if ($uri === 'post') { // /post?id=123
     $controller = new PostController();
     $id = (int)($_GET['id'] ?? 0);
     if (is_post()) $controller->comment($id); else $controller->show($id);
     exit;
-}
-
-if ($uri === 'post/create') { // /post/create?b=123
+} elseif ($uri === 'post/create') { // /post/create?b=123
     $controller = new PostController();
     $boardId = (int)($_GET['b'] ?? 0);
     if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
     exit;
 }
 
-// ---- Search (new) ----
-if ($uri === 'search') {            // /search?q=...&type=posts|users|tags[&tag=slug]
+/* -------- Search -------- */
+if ($uri === 'search') { // /search?q=...&type=posts|users|tags[&tag=slug]
     (new SearchController())->index();
     exit;
 }
 
-// ---- Tags (new) ----
-if ($uri === 'tags') {              // /tags
+/* -------- Tags -------- */
+if ($uri === 'tags') { // /tags
     (new TagController())->index();
     exit;
-}
-
-if ($uri === 'tag') {               // fallback: /tag?slug=php
+} elseif ($uri === 'tag') { // /tag?slug=php
     $slug = (string)($_GET['slug'] ?? '');
     (new TagController())->show($slug);
     exit;
-}
-
-// Pretty route: /tag/{slug}
-if (preg_match('#^tag/([^/]+)$#', $uri, $m)) {
-    $slug = $m[1];
-    (new TagController())->show($slug);
+} elseif (preg_match('#^tag/([^/]+)$#', $uri, $m)) { // pretty: /tag/{slug}
+    (new TagController())->show($m[1]);
     exit;
 }
 
-// --- 404 ---
-//http_response_code(404);
-//echo "404 Not Found";
+/* -------- 404 (last) -------- */
+http_response_code(404);
+echo "404 Not Found";
+exit;
 ?>

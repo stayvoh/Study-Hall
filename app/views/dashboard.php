@@ -3,17 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Dashboard · Study Hall</title>
-
-  <!-- Theme init BEFORE CSS to avoid flash -->
-  <script id="theme-init">
-    (function () {
-      const cookieTheme = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/)?.[1];
-      const storedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = cookieTheme || storedTheme || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-bs-theme', theme);
-    })();
-  </script>
+  <?php
+  $themeInit = __DIR__ . '/theme-init.php';
+  if (is_file($themeInit)) include $themeInit;
+  ?>
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -23,14 +16,16 @@
 </head>
 <body class="bg-body"><!-- bg-body adapts with theme -->
 
-
-
+<?php
+  $hdr = __DIR__ . '/header.php';   // adjust path if your header lives in /views/partials/header.php
+  if (is_file($hdr)) include $hdr;
+?>
 <section class="py-5 text-center">
   <div class="container">
     <h1 class="display-5 fw-semibold mb-2">Welcome to Study Hall</h1>
     <p class="lead text-muted mb-4">Learn, Collaborate, Build Together</p>
 
-    <!-- Unified Search: dropdown-only filter -->
+    <!-- Unified Search -->
     <form class="row g-2 justify-content-center" method="GET" action="/search" style="max-width:900px;margin:0 auto;">
       <div class="col-12 col-md-6">
         <input class="form-control form-control-lg me-2" type="search"
@@ -51,92 +46,38 @@
   </div>
 </section>
 
-<div class="container mb-5" style="max-width: 1000px;">
+<!-- Boards section -->
+<?php if (!empty($boards) && is_array($boards)): ?>
+<div class="container mb-4" style="max-width: 1000px;">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">Activity Feed</h4>
-    <ul class="nav nav-pills">
-      <?php $feed = $_GET['feed'] ?? 'all'; ?>
-      <li class="nav-item">
-        <a class="nav-link <?= $feed==='all'?'active':''; ?>" href="/dashboard?feed=all">All</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link <?= $feed==='following'?'active':''; ?>" href="/dashboard?feed=following">Following</a>
-      </li>
-    </ul>
+    <h4 class="mb-0">Boards</h4>
   </div>
 
-  <!-- Real posts list if provided; fall back to placeholders -->
-  <?php if (!empty($posts) && is_array($posts)): ?>
-    <div class="list-group shadow-sm">
-      <?php foreach ($posts as $p): ?>
-        <a href="/post?id=<?= (int)$p['id'] ?>" class="list-group-item list-group-item-action">
-          <div class="d-flex w-100 justify-content-between">
-            <h6 class="mb-1"><?= htmlspecialchars($p['title']) ?></h6>
-            <small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small>
-          </div>
-
-          <?php if (!empty($p['excerpt']) || !empty($p['body'])): ?>
-            <p class="mb-1 text-muted">
-              <?= htmlspecialchars($p['excerpt'] ?? mb_strimwidth($p['body'], 0, 160, '…')) ?>
-            </p>
-          <?php endif; ?>
-
-          <?php if (!empty($p['tags']) && is_array($p['tags'])): ?>
-            <div class="mt-1">
-              <?php foreach ($p['tags'] as $t): ?>
-                <a class="badge rounded-pill text-bg-light border me-1"
-                   href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= htmlspecialchars($t['name']) ?></a>
-              <?php endforeach; ?>
+  <div class="row g-3">
+    <?php foreach ($boards as $b): ?>
+      <div class="col-12 col-md-6">
+        <a class="card text-decoration-none h-100" href="/board?id=<?= (int)$b['id'] ?>">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="card-title mb-0"><?= htmlspecialchars($b['name']) ?></h6>
+              <?php if (isset($b['post_count'])): ?>
+                <span class="badge text-bg-light"><?= (int)$b['post_count'] ?> posts</span>
+              <?php endif; ?>
             </div>
-          <?php endif; ?>
-
-          <div class="small text-muted mt-1">
-            by <?= htmlspecialchars($p['author'] ?? 'User') ?>
+            <?php if (!empty($b['description'])): ?>
+              <p class="card-text text-muted mt-2 mb-0"><?= htmlspecialchars($b['description']) ?></p>
+            <?php endif; ?>
           </div>
         </a>
-      <?php endforeach; ?>
-    </div>
-
-    <?php
-      $page   = max(1, (int)($_GET['page'] ?? 1));
-      $prev   = $page > 1 ? $page - 1 : 1;
-      $next   = $page + 1;
-      $build  = function($n) { $q = $_GET; $q['page']=$n; return '/dashboard?'.http_build_query($q); };
-    ?>
-    <nav class="mt-3">
-      <ul class="pagination">
-        <li class="page-item <?= $page<=1?'disabled':''; ?>"><a class="page-link" href="<?= $build($prev) ?>">Prev</a></li>
-        <li class="page-item"><a class="page-link" href="<?= $build($next) ?>">Next</a></li>
-      </ul>
-    </nav>
-
-  <?php else: ?>
-    <div class="list-group shadow-sm">
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Question on Lecture 3</h6>
-          <small class="text-muted">1 hour ago</small>
-        </div>
-        <p class="mb-1 text-muted">Why does this work?</p>
-      </a>
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Project Idea</h6>
-          <small class="text-muted">1 day ago</small>
-        </div>
-        <p class="mb-1 text-muted">Looking for teammate skilled in JS.</p>
-      </a>
-      <a href="#" class="list-group-item list-group-item-action">
-        <div class="d-flex w-100 justify-content-between">
-          <h6 class="mb-1">Lost and Found Web App</h6>
-          <small class="text-muted">1 week ago</small>
-        </div>
-        <p class="mb-1 text-muted">New updates pushed to repo.</p>
-      </a>
-    </div>
-  <?php endif; ?>
+      </div>
+    <?php endforeach; ?>
+  </div>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<?php else: ?>
+  <div class="container mb-5" style="max-width: 1000px;">
+    <div class="alert alert-light border">No boards found.</div>
+  </div>
+<?php endif; ?>
 
 <!-- Theme toggle logic -->
 <script>

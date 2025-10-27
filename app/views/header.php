@@ -8,10 +8,9 @@ if (!isset($currentUser) && isset($_SESSION['uid'])) {
 ?>
 <nav class="navbar navbar-dark bg-dark">
   <div class="container-fluid">
-    <a class="navbar-brand" href="/dashboard">StudyHall</a>
+    <a class="navbar-brand" href="/dashboard">Study Hall</a>
 
     <div class="d-flex align-items-center">
-        <!--Toogle for light and dark-->
         <button id="themeToggle" class="btn btn-outline-light btn-sm me-3" title="Toggle Theme">
             <i id="themeIcon" class="bi bi-moon-stars"></i>
         </button>
@@ -40,3 +39,39 @@ if (!isset($currentUser) && isset($_SESSION['uid'])) {
     </div>
   </div>
 </nav>
+<script>
+(function () {
+  const root  = document.documentElement;
+  const btn   = document.getElementById('themeToggle');
+  const icon  = document.getElementById('themeIcon');
+  const label = document.getElementById('themeLabel');
+
+  function updateUI(theme) {
+    if (!icon || !label) return;
+    if (theme === 'dark') {
+      icon.className = 'bi bi-sun';
+      label.textContent = 'Light';
+    } else {
+      icon.className = 'bi bi-moon-stars';
+      label.textContent = 'Dark';
+    }
+  }
+
+  function setTheme(theme) {
+    root.setAttribute('data-bs-theme', theme);
+    try { localStorage.setItem('theme', theme); } catch (_) {}
+    try { document.cookie = "theme=" + theme + "; path=/; max-age=31536000"; } catch (_) {}
+    updateUI(theme);
+  }
+
+  // Initialize UI from current attribute (theme-init already set it)
+  updateUI(root.getAttribute('data-bs-theme') || 'light');
+
+  if (btn) {
+    btn.addEventListener('click', function () {
+      const next = (root.getAttribute('data-bs-theme') === 'dark') ? 'light' : 'dark';
+      setTheme(next);
+    });
+  }
+})();
+</script>

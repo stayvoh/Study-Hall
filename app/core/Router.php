@@ -36,21 +36,43 @@ class Router
     public function dispatch(): void
     {
         $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-        $uri    = strtok($_SERVER['REQUEST_URI'] ?? '/', '?'); // strip query string
+        $uriRaw = $_SERVER['REQUEST_URI'] ?? '/';
+        $uri    = strtok($uriRaw, '?'); // match routes on path only
         $routes = $this->routes[$method] ?? [];
 
+        // Try registered routes first
         foreach ($routes as $r) {
             if (preg_match($r['regex'], $uri, $m)) {
                 // Collect named params only
                 $params = [];
                 foreach ($m as $k => $v) if (!is_int($k)) $params[$k] = $v;
-                return $this->invoke($r['handler'], $params);
+                $this->invoke($r['handler'], $params);
+                return;
             }
         }
+
+        // ---- Fallbacks (keep app working without new route registrations) ----
+        // Normalize path without basePath for file lookups
+        $path = $this->stripBasePath($uri);
+
+        // 1) Special-case: /board -> load views/board_show.php (uses $_GET['id'])
+        if ($path === '/board') {
+            $viewFile = $this->resolveView('board_show.php');
+            if ($viewFile) { require $viewFile; return; }
+        }
+
+        // 2) Direct view passthrough, e.g. /board_show.php
+        if (str_ends_with($path, '.php')) {
+            $viewFile = $this->resolveView(ltrim($path, '/'));
+            if ($viewFile) { require $viewFile; return; }
+        }
+        // ---------------------------------------------------------------------
+
         // 404
         if ($this->notFoundHandler) {
             http_response_code(404);
-            return call_user_func($this->notFoundHandler, $uri);
+            call_user_func($this->notFoundHandler, $uri);
+            return;
         }
         http_response_code(404);
         echo "Not Found";
@@ -79,4 +101,44 @@ class Router
         }
         throw new RuntimeException('Invalid route handler');
     }
+
+    // --- Helpers -------------------------------------------------------------
+
+    private function stripBasePath(string $uri): string
+    {
+        $path = $uri;
+        if ($this->basePath !== '' && str_starts_with($path, $this->basePath)) {
+            $path = substr($path, strlen($this->basePath));
+            if ($path === false) $path = '/';
+        }
+        if ($path === '') $path = '/';
+        return $path;
+    }
+
+    private function resolveView(string $relative): ?string
+{
+    // Normalize and block traversal
+    $relative = ltrim($relative, "/\\");
+    if (strpos($relative, '..') !== false) return null;
+
+    // Try common roots: /app/views and /app
+    $roots = [
+        realpath(__DIR__ . '/../views'), // e.g., /app/views
+        realpath(__DIR__ . '/..'),       // e.g., /app  (where board_show.php may be)
+    ];
+
+    foreach ($roots as $root) {
+        if ($root === false) continue;
+
+        // 1) exact relative path under root
+        $candidate = $root . DIRECTORY_SEPARATOR . $relative;
+        if (is_file($candidate)) return $candidate;
+
+        // 2) basename fallback (handle requests like "/board_show.php")
+        $base = basename($relative);
+        $candidate2 = $root . DIRECTORY_SEPARATOR . $base;
+        if (is_file($candidate2)) return $candidate2;
+    }
+    return null;
+}
 }
