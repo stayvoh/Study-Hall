@@ -9,6 +9,7 @@ class DashboardController extends BaseController
 {
     $tab = ($_GET['tab'] ?? 'all');
     $uid = (int)($_SESSION['uid'] ?? 0);
+    $bq   = trim((string)($_GET['bq'] ?? ''));
     if ($tab === 'following' && $uid > 0) {
         $boards = BoardFollow::boardsForUser($uid);
         $this->render('dashboard', [
@@ -20,7 +21,7 @@ class DashboardController extends BaseController
     }
 
     $db   = Database::getConnection();
-    $bq   = trim((string)($_GET['bq'] ?? ''));
+    
     $sql  = "
         SELECT b.id, b.name, b.description, b.created_at, COUNT(p.id) AS post_count
         FROM board b
