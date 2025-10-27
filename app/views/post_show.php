@@ -1,11 +1,12 @@
 <?php declare(strict_types=1);
-/** @var array      $post      {id,title,body,created_at,author,board_id?} */
+/** @var array      $post      {id,title,body,created_at,author,board_id} */
 /** @var array      $comments  list of {author,created_at,body} */
 /** @var array|null $tags      optional list of {id,name,slug} */
 /** @var ?string    $error */
 
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 $error = $error ?? null;
+$boardId = (int)($post['board_id'] ?? 0);
 ?>
 <!doctype html>
 <html lang="en">
@@ -19,8 +20,9 @@ $error = $error ?? null;
 <body class="bg-light">
   <div class="container py-4" style="max-width: 800px">
 
-    <?php if (!empty($post['board_id'])): ?>
-      <a class="btn btn-link mb-3" href="/board?b=<?= (int)$post['board_id'] ?>">&larr; Back to Board</a>
+    <?php if ($boardId > 0): ?>
+      <!-- FIXED: always link back using ?id= which board_show expects -->
+      <a class="btn btn-link mb-3" href="/board?id=<?= $boardId ?>">&larr; Back to Board</a>
     <?php else: ?>
       <a class="btn btn-link mb-3" href="/dashboard">&larr; Back to Dashboard</a>
     <?php endif; ?>

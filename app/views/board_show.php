@@ -124,7 +124,7 @@ $followerCount = BoardFollow::followersCount($boardId);
         <?php endif; ?>
 
         <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back to boards</a>
-        <a class="btn btn-sm btn-primary" href="/post_create.php?board=<?= (int)$board['id'] ?>">New post</a>
+        <a class="btn btn-sm btn-primary" href="/post/create?b=<?= (int)$board['id'] ?>">New post</a>
       </div>
     </div>
 

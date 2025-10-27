@@ -2,90 +2,115 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../core/Database.php';
-require_once __DIR__ . '/../models/Tag.php';
+require_once __DIR__ . '/../core/BaseController.php';
+require_once __DIR__ . '/../models/Post.php';
+require_once __DIR__ . '/../models/Board.php';
 
 class PostController extends BaseController
 {
-    public function show(int $id): void
-    {
-        $this->renderPost($id, null);
+    public function createForm(int $boardId): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
+        $pdo = Database::getConnection();
+        $tagsStmt = $pdo->query("SELECT id, name, slug FROM tag ORDER BY name");
+        $allTags = $tagsStmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        $_SESSION['csrf'] ??= bin2hex(random_bytes(16));
+        $this->render('post_create', ['boardId' => $boardId, 'allTags' => $allTags]);
     }
 
-    // Handles POST /post?id={id}
-    public function comment(int $id): void
-    {
-        $db   = Database::getConnection();
-        $body = trim((string)($_POST['body'] ?? ''));
 
-        // Optional CSRF check if helper exists
-        if (function_exists('csrf_check') && !csrf_check((string)($_POST['csrf'] ?? ''))) {
-            $this->renderPost($id, 'Invalid request. Please try again.');
+    public function create(int $boardId): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
+
+        // Optional CSRF check if your view posts a token
+        $postedCsrf = (string)($_POST['csrf'] ?? '');
+        if (function_exists('csrf_token') && !hash_equals(csrf_token(), $postedCsrf)) {
+            $this->render('post_create', [
+                'boardId' => $boardId,
+                'error'   => 'Invalid request. Please try again.',
+                'old'     => [
+                    'title'       => (string)($_POST['title'] ?? ''),
+                    'body'        => (string)($_POST['body'] ?? ''),
+                    'is_question' => !empty($_POST['is_question']) ? 1 : 0,
+                ],
+            ]);
             return;
         }
 
-        // Require logged-in user
-        $userId = (int)($_SESSION['user_id'] ?? 0);
-        if ($userId <= 0) {
-            $this->renderPost($id, 'Please log in to comment.');
+        $title = trim((string)($_POST['title'] ?? ''));
+        $body  = trim((string)($_POST['body'] ?? ''));
+        $isQ   = !empty($_POST['is_question']) ? 1 : 0;
+
+        if ($title === '' || $body === '') {
+            $this->render('post_create', [
+                'boardId' => $boardId,
+                'error'   => 'Title and body are required.',
+                'old'     => ['title' => $title, 'body' => $body, 'is_question' => $isQ],
+            ]);
             return;
         }
 
-        if ($body === '') {
-            $this->renderPost($id, 'Comment cannot be empty.');
-            return;
-        }
-
-        // Save comment
-        $stmt = $db->prepare("INSERT INTO comment (post_id, user_id, body) VALUES (:pid, :uid, :body)");
-        $stmt->execute([':pid' => $id, ':uid' => $userId, ':body' => $body]);
-
-        // PRG pattern: redirect back to the post
-        header('Location: /post?id=' . (int)$id);
+        $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body, $isQ);
+        header('Location: /post?id=' . $postId);
         exit;
     }
 
-    /**
-     * Loads post + tags + comments and renders the view.
-     */
-    private function renderPost(int $id, ?string $error): void
-    {
-        $db = Database::getConnection();
+    public function show(int $id): void {
+        $rec = Post::findOneWithMeta($id);
+        if (!$rec) { http_response_code(404); echo 'Post not found'; return; }
 
-        // Post + author
-        $stmt = $db->prepare("
-            SELECT p.id, p.title, p.body, p.created_at, p.board_id,
-                   COALESCE(up.username, ua.email) AS author
-            FROM post p
-            JOIN user_account ua ON ua.id = p.user_id
-            LEFT JOIN user_profile up ON up.user_id = ua.id
-            WHERE p.id = :id
-        ");
-        $stmt->execute([':id' => $id]);
-        $post = $stmt->fetch();
-        if (!$post) { http_response_code(404); echo 'Post not found'; return; }
+        // Shape to match your existing post_show.php expectations
+        $post = [
+            'id'         => $rec['id'],
+            'title'      => $rec['title'],
+            'body'       => $rec['body'],
+            'created_at' => $rec['created_at'],
+            'author'     => $rec['author'] ?? 'User',
+            'board_id'   => $rec['board_id'] ?? null,
+        ];
+        $tags     = $rec['tags'] ?? [];
+        $comments = $rec['comments'] ?? [];
 
-        // Tags
-        $tagModel = new Tag($db);
-        $tags = $tagModel->tagsForPost($id);  // [{id,name,slug}]
+        $this->render('post_show', compact('post', 'tags', 'comments'));
+    }
 
-        // Comments + author
-        $cstmt = $db->prepare("
-            SELECT c.id, c.body, c.created_at,
-                   COALESCE(up.username, ua.email) AS author
-            FROM comment c
-            JOIN user_account ua ON ua.id = c.user_id
-            LEFT JOIN user_profile up ON up.user_id = ua.id
-            WHERE c.post_id = :pid
-            ORDER BY c.created_at ASC
-        ");
-        $cstmt->execute([':pid' => $id]);
-        $comments = $cstmt->fetchAll() ?: [];
+    public function comment(int $id): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
 
-        $this->render('post_show', [
-            'post'     => $post,
-            'tags'     => $tags,
-            'comments' => $comments,
-            'error'    => $error,
+        // Optional CSRF check if your view posts a token
+        $postedCsrf = (string)($_POST['csrf'] ?? '');
+        if (function_exists('csrf_token') && !hash_equals(csrf_token(), $postedCsrf)) {
+            $rec = Post::findOneWithMeta($id);
+            if ($rec) {
+                $post = [
+                    'id' => $rec['id'], 'title' => $rec['title'], 'body' => $rec['body'],
+                    'created_at' => $rec['created_at'], 'author' => $rec['author'] ?? 'User',
+                    'board_id' => $rec['board_id'] ?? null,
+                ];
+                $tags     = $rec['tags'] ?? [];
+                $comments = $rec['comments'] ?? [];
+                $error    = 'Invalid request. Please try again.';
+                $this->render('post_show', compact('post','tags','comments','error'));
+                return;
+            }
+            http_response_code(400); echo 'Invalid request'; return;
+        }
+
+        $body = trim((string)($_POST['body'] ?? ''));
+        if ($body === '') { header('Location: /post?id=' . $id); exit; }
+
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("INSERT INTO comment (post_id, created_by, body) VALUES (:pid, :uid, :body)");
+        $stmt->execute([
+            ':pid'  => $id,
+            ':uid'  => (int)$_SESSION['uid'],
+            ':body' => $body,
         ]);
+
+        header('Location: /post?id=' . $id . '#c' . $pdo->lastInsertId());
+        exit;
     }
 }
