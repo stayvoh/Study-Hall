@@ -110,7 +110,7 @@ elseif ($uri === 'boards') {
 
 elseif ($uri === 'board') { // /board?b=123&page=2
     $controller = new BoardController();
-    $id   = (int)($_GET['b'] ?? 0);
+    $id   = (int)($_GET['id'] ?? ($_GET['b'] ?? 0));
     $page = (int)($_GET['page'] ?? 1);
     $controller->show($id, $page);
     exit;
@@ -142,7 +142,6 @@ elseif ($uri === 'search') {
     (new SearchController())->index();
     exit;
 }
-
 // --- Tags ---
 elseif ($uri === 'tags') {
     (new TagController())->index();

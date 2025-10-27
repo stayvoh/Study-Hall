@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 class Board
 {
+
+    public function __construct(private PDO $db) {}
+
     public static function all(): array {
         $pdo = Database::getConnection();
         $stmt = $pdo->query(
@@ -32,5 +35,23 @@ class Board
              VALUES (NULL, ?, ?)'
         );
         $stmt->execute([$name, $desc ?: null]);
+    }
+
+    public function allWithCounts(): array
+    {
+        $sql = "
+            SELECT 
+                b.id,
+                b.name,
+                b.description,
+                b.created_at,
+                COUNT(p.id) AS post_count
+            FROM board b
+            LEFT JOIN post p ON p.board_id = b.id
+            GROUP BY b.id, b.name, b.description, b.created_at
+            ORDER BY b.created_at DESC, b.id DESC
+        ";
+        $stmt = $this->db->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

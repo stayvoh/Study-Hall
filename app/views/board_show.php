@@ -1,71 +1,151 @@
-<?php declare(strict_types=1);
-/** @var array $board */
-/** @var array $posts */
-/** @var int $page */
-/** @var int $pages */
-$boardId = (int)$board['id'];
+<?php
+declare(strict_types=1);
+
+require_once __DIR__ . '/../core/Database.php';
+
+$db = Database::getConnection();
+
+// 1) Validate board id
+$boardId = (int)($_GET['id'] ?? 0);
+if ($boardId <= 0) {
+    http_response_code(400);
+    echo "Invalid board id";
+    exit;
+}
+
+// 2) Load board
+$stmt = $db->prepare("SELECT id, name, description, created_at FROM board WHERE id = :id");
+$stmt->bindValue(':id', $boardId, PDO::PARAM_INT);
+$stmt->execute();
+$board = $stmt->fetch();
+if (!$board) {
+    http_response_code(404);
+    echo "Board not found";
+    exit;
+}
+
+// 3) Pagination
+$page   = max(1, (int)($_GET['page'] ?? 1));
+$limit  = 20;
+$offset = ($page - 1) * $limit;
+
+// 4) Posts (with author + tags) for this board
+$sql = "
+    SELECT
+        p.id, p.title, p.body, p.created_at,
+        COALESCE(up.username, ua.email) AS author,
+        GROUP_CONCAT(DISTINCT CONCAT(t.name, ':', t.slug) SEPARATOR '|') AS tag_blob
+    FROM post p
+    JOIN user_account ua ON ua.id = p.user_id
+    LEFT JOIN user_profile up ON up.user_id = ua.id
+    LEFT JOIN post_tag pt ON pt.post_id = p.id
+    LEFT JOIN tag t       ON t.id = pt.tag_id
+    WHERE p.board_id = :bid
+    GROUP BY p.id
+    ORDER BY p.created_at DESC
+    LIMIT :lim OFFSET :off
+";
+$stmt = $db->prepare($sql);
+$stmt->bindValue(':bid', $boardId, PDO::PARAM_INT);
+$stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+$stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+$stmt->execute();
+$rows = $stmt->fetchAll() ?: [];
+
+$posts = array_map(function($r){
+    $tags = [];
+    if (!empty($r['tag_blob'])) {
+        foreach (explode('|', $r['tag_blob']) as $pair) {
+            [$name, $slug] = array_pad(explode(':', $pair, 2), 2, '');
+            if ($name !== '' && $slug !== '') $tags[] = ['name'=>$name, 'slug'=>$slug];
+        }
+    }
+    $r['tags']    = $tags;
+    $r['excerpt'] = mb_strimwidth((string)($r['body'] ?? ''), 0, 200, '…');
+    return $r;
+}, $rows);
+
+// 5) Simple page builder that preserves query string
+$build = function(int $n) {
+    $q = $_GET;
+    $q['page'] = $n;
+    return '/board_show.php?' . http_build_query($q);
+};
+
+// ===== View =====
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title><?= htmlspecialchars($board['name']) ?> – Study Hall</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/assets/custom.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title><?= htmlspecialchars($board['name']) ?> · Study Hall</title>
+  <?php
+  $themeInit = __DIR__ . '/theme-init.php';
+  if (is_file($themeInit)) include $themeInit;
+  ?>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-  <div class="container py-4" style="max-width: 960px">
-    <div class="d-flex align-items-center justify-content-between mb-2">
-      <h1 class="h3 mb-0"><?= htmlspecialchars($board['name']) ?></h1>
-      <div class="d-flex gap-2">
-        <!-- TODO: point to your Post create route when ready -->
-        <a class="btn btn-orange" href="/post/create?b=<?= $boardId ?>">New Post</a>
-        <a class="btn btn-outline-secondary" href="/boards">Back to Boards</a>
+<body class="bg-body">
+<?php
+  $hdr = __DIR__ . '/header.php';
+  if (is_file($hdr)) include $hdr;
+?>
+
+<section class="py-4">
+  <div class="container" style="max-width: 1000px;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h3 class="mb-0"><?= htmlspecialchars($board['name']) ?></h3>
+      <div>
+        <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back to boards</a>
+        <a class="btn btn-sm btn-primary" href="/post_create.php?board=<?= (int)$board['id'] ?>">New post</a>
       </div>
     </div>
     <?php if (!empty($board['description'])): ?>
       <p class="text-muted mb-4"><?= htmlspecialchars($board['description']) ?></p>
     <?php endif; ?>
 
-    <?php if (empty($posts)): ?>
-      <div class="alert alert-info shadow-sm">No posts yet. Be the first to start a discussion.</div>
-    <?php else: ?>
-      <div class="list-group shadow-sm mb-3">
+    <?php if ($posts): ?>
+      <div class="list-group shadow-sm">
         <?php foreach ($posts as $p): ?>
-          <a class="list-group-item list-group-item-action p-3" href="/post?id=<?= (int)$p['id'] ?>">
+          <a href="/post?id=<?= (int)$p['id'] ?>" class="list-group-item list-group-item-action">
             <div class="d-flex w-100 justify-content-between">
-              <h2 class="h5 mb-1 mb-sm-0"><?= htmlspecialchars($p['title']) ?></h2>
-              <small class="text-muted ms-sm-3"><?= htmlspecialchars($p['created_at']) ?></small>
+              <h6 class="mb-1"><?= htmlspecialchars($p['title']) ?></h6>
+              <small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small>
             </div>
-            <small class="text-muted">by <?= htmlspecialchars($p['author']) ?></small>
-            <p class="mb-0 mt-1">
-              <?= htmlspecialchars($p['preview']) ?>
-              <?= (strlen($p['preview']) === 180) ? '…' : '' ?>
-            </p>
+            <?php if (!empty($p['excerpt'])): ?>
+              <p class="mb-1 text-muted"><?= htmlspecialchars($p['excerpt']) ?></p>
+            <?php endif; ?>
+            <?php if (!empty($p['tags'])): ?>
+              <div class="mt-1">
+                <?php foreach ($p['tags'] as $t): ?>
+                  <a class="badge rounded-pill text-bg-light border me-1"
+                     href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= htmlspecialchars($t['name']) ?></a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+            <div class="small text-muted mt-1">by <?= htmlspecialchars($p['author'] ?? 'User') ?></div>
           </a>
         <?php endforeach; ?>
       </div>
-
-      <!-- Pagination -->
-      <?php if ($pages > 1): ?>
-        <nav aria-label="Posts navigation">
-          <ul class="pagination">
-            <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
-              <a class="page-link" href="/board?b=<?= $boardId ?>&page=<?= max(1, $page-1) ?>" tabindex="-1">Prev</a>
-            </li>
-            <?php for ($i = 1; $i <= $pages; $i++): ?>
-              <li class="page-item <?= $i === $page ? 'active' : '' ?>">
-                <a class="page-link" href="/board?b=<?= $boardId ?>&page=<?= $i ?>"><?= $i ?></a>
-              </li>
-            <?php endfor; ?>
-            <li class="page-item <?= $page >= $pages ? 'disabled' : '' ?>">
-              <a class="page-link" href="/board?b=<?= $boardId ?>&page=<?= min($pages, $page+1) ?>">Next</a>
-            </li>
-          </ul>
-        </nav>
-      <?php endif; ?>
+      <?php
+        $page = max(1, (int)($_GET['page'] ?? 1));
+        $prev = max(1, $page - 1);
+        $next = $page + 1;
+      ?>
+      <nav class="mt-3">
+        <ul class="pagination">
+          <li class="page-item <?= $page<=1?'disabled':''; ?>"><a class="page-link" href="<?= $build($prev) ?>">Prev</a></li>
+          <li class="page-item"><a class="page-link" href="<?= $build($next) ?>">Next</a></li>
+        </ul>
+      </nav>
+    <?php else: ?>
+      <div class="alert alert-light border">No posts yet in this board.</div>
     <?php endif; ?>
   </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
