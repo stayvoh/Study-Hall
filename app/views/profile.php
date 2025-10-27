@@ -8,6 +8,11 @@
 </head>
 <body class="bg-light">
 
+<?php
+// Include the header (theme toggle + navbar)
+$hdr = __DIR__ . '/header.php'; // adjust the path if needed
+if (is_file($hdr)) include $hdr;
+?>
 <div class="container mt-5" style="max-width: 900px;">
   <!-- Profile Header -->
   <div class="row align-items-center">
