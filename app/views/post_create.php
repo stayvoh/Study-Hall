@@ -8,21 +8,34 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 $csrf = function_exists('csrf_token') ? csrf_token() : ($_SESSION['csrf'] ??= bin2hex(random_bytes(16)));
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 $old = $old ?? [];
-$sel = array_map('intval', $old['tags'] ?? []); // preselected tag IDs if we re-render after validation error
+$sel = array_map('intval', $old['tags'] ?? []);
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <title>New post · Study Hall</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/assets/custom.css" rel="stylesheet">
+
+  <?php
+  $themeInit = __DIR__ . '/theme-init.php';
+  if (is_file($themeInit)) include $themeInit;
+  ?>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="bg-body">
+
+<?php
+  // Include shared header
+  $hdr = __DIR__ . '/header.php';
+  if (is_file($hdr)) include $hdr;
+?>
+
 <div class="container py-4" style="max-width: 800px;">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Create a new post</h3>
-    <!-- FIXED: back link uses ?id= -->
     <a class="btn btn-outline-secondary btn-sm" href="/board?id=<?= (int)$boardId ?>">Back to board</a>
   </div>
 
@@ -46,14 +59,13 @@ $sel = array_map('intval', $old['tags'] ?? []); // preselected tag IDs if we re-
     <!-- Tags -->
     <div class="mb-3">
       <label class="form-label">Tags</label>
-      <input type="text"
-            class="form-control"
-            name="new_tags"
-            placeholder="e.g. help, php, etc">
+      <input type="text" class="form-control" name="new_tags" placeholder="e.g. help, php, etc">
     </div>
 
     <button class="btn btn-primary">Publish</button>
   </form>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

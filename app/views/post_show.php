@@ -8,55 +8,27 @@ function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 $error = $error ?? null;
 $boardId = (int)($post['board_id'] ?? 0);
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title><?= h($post['title'] ?? 'Post') ?> – Study Hall</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/assets/custom.css" rel="stylesheet">
-  <style>
-    .author-wrapper {
-    position: relative;
-    display: inline-block;
-   padding: 5px 20px 30px 10px;
-    cursor: pointer;
-    }
 
-    .author-name {
-        display: inline-block;
-    }
-
-    .view-profile-link {
-        display: none;
-        position: absolute;
-        top: 100%; /* just below the name */
-        left: 0;
-        margin-top: 5px;
-        padding: 6px 10px;
-        background: #f8f9fa;
-        border: 1px solid #ccc;
-        border-radius: 4px;
-        font-size: 0.9rem;
-        color: #0d6efd;
-        text-decoration: none;
-        white-space: nowrap;
-        z-index: 10;
-    }
-
-    /* Hover effect on the wrapper, not just the name */
-    .author-wrapper:hover .view-profile-link,
-    .author-wrapper .view-profile-link:hover {
-        display: inline-block;
-        pointer-events: auto;
-    }
-
-
-
-  </style>
+  <?php
+    $themeInit = __DIR__ . '/theme-init.php';
+    if (is_file($themeInit)) include $themeInit;
+  ?>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-light">
+<body class="bg-body">
+  <?php
+    $hdr = __DIR__ . '/header.php';
+    if (is_file($hdr)) include $hdr;
+  ?>
+
   <div class="container py-4" style="max-width: 800px">
 
     <?php if ($boardId > 0): ?>
@@ -69,12 +41,12 @@ $boardId = (int)($post['board_id'] ?? 0);
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <h2 class="h4 mb-1"><?= h($post['title']) ?></h2>
-        <div class="author-wrapper text-muted small mb-3" data-user-id="<?= $post['created_by'] ?? 0 ?>">
-        <span class="author-name">by <?= h($post['author'] ?? 'User') ?> • <?= h($post['created_at'] ?? '') ?>
-        </span>
-            <a href="/profile?id=<?= $post['created_by'] ?? 0 ?>" class="view-profile-link">View Profile</a>
+        <div class="text-muted small mb-3">
+          by <?= h($post['author'] ?? 'User') ?> • <?= h($post['created_at'] ?? '') ?>
+          <?php if (!empty($post['created_by'])): ?>
+            • <a href="/profile?id=<?= (int)$post['created_by'] ?>">View Profile</a>
+          <?php endif; ?>
         </div>
-
 
         <?php if (!empty($tags) && is_array($tags)): ?>
           <div class="mb-3">
@@ -101,11 +73,12 @@ $boardId = (int)($post['board_id'] ?? 0);
         <?php foreach ($comments as $c): ?>
           <li class="list-group-item">
             <div class="d-flex justify-content-between">
-              <div class="author-wrapper small text-muted" data-user-id="<?= $c['created_by'] ?? 0 ?>">
-                  <span class="author-name">By <?= h($c['author'] ?? 'User') ?></span>
-                  <a href="/profile?id=<?= $c['created_by'] ?? 0 ?>" class="view-profile-link">View Profile</a>
+              <div class="small text-muted">
+                By <?= h($c['author'] ?? 'User') ?>
+                <?php if (!empty($c['created_by'])): ?>
+                  • <a href="/profile?id=<?= (int)$c['created_by'] ?>">View Profile</a>
+                <?php endif; ?>
               </div>
-
               <small class="text-muted"><?= h($c['created_at'] ?? '') ?></small>
             </div>
             <div class="mt-2"><?= nl2br(h($c['body'] ?? '')) ?></div>
@@ -116,7 +89,7 @@ $boardId = (int)($post['board_id'] ?? 0);
 
     <!-- Add Comment -->
     <div class="card border-0 shadow-sm">
-      <div class="card-header bg-white border-0">Add a Comment</div>
+      <div class="card-header">Add a Comment</div>
       <div class="card-body">
         <?php if ($error): ?>
           <div class="alert alert-danger shadow-sm"><?= h($error) ?></div>
@@ -126,11 +99,13 @@ $boardId = (int)($post['board_id'] ?? 0);
           <div class="mb-3">
             <textarea class="form-control" name="body" rows="4" required></textarea>
           </div>
-          <button class="btn btn-orange" type="submit">Post Comment</button>
+          <button class="btn btn-blue" type="submit">Post Comment</button>
         </form>
       </div>
     </div>
 
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
