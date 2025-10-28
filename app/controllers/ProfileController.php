@@ -9,7 +9,6 @@
           
             $loggedInUserId = $_SESSION['uid'] ?? 0;
 
-         
             $profileId = (int)($_GET['id'] ?? $loggedInUserId); // if no ?id= use self
 
             // 3. Fetch profile data
@@ -19,6 +18,8 @@
                 echo "Profile not found";
                 exit;
             }
+            $userPosts = Post::findByUser($profileId);
+
 
             // 4. Fetch counts
             $postCount = $profileModel->countPosts($profileId);
