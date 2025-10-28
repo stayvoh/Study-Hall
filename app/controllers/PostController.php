@@ -19,7 +19,6 @@ class PostController extends BaseController
         $this->render('post_create', ['boardId' => $boardId, 'allTags' => $allTags]);
     }
 
-
     public function create(int $boardId): void {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
@@ -41,7 +40,7 @@ class PostController extends BaseController
 
         $title = trim((string)($_POST['title'] ?? ''));
         $body  = trim((string)($_POST['body'] ?? ''));
-        $isQ   = !empty($_POST['is_question']) ? 1 : 0;
+        $isQ   = !empty($_POST['is_question']) ? 1 : 0; // still accepted, now safely ignored by model
 
         if ($title === '' || $body === '') {
             $this->render('post_create', [
@@ -52,6 +51,7 @@ class PostController extends BaseController
             return;
         }
 
+        // ✅ Back-compat: model accepts 5th arg but ignores it (DB column removed)
         $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body, $isQ);
         header('Location: /post?id=' . $postId);
         exit;
@@ -61,14 +61,15 @@ class PostController extends BaseController
         $rec = Post::findOneWithMeta($id);
         if (!$rec) { http_response_code(404); echo 'Post not found'; return; }
 
-        // Shape to match your existing post_show.php expectations
+        // Default is_question for legacy templates that check it
         $post = [
-            'id'         => $rec['id'],
-            'title'      => $rec['title'],
-            'body'       => $rec['body'],
-            'created_at' => $rec['created_at'],
-            'author'     => $rec['author'] ?? 'User',
-            'board_id'   => $rec['board_id'] ?? null,
+            'id'           => $rec['id'],
+            'title'        => $rec['title'],
+            'body'         => $rec['body'],
+            'created_at'   => $rec['created_at'],
+            'author'       => $rec['author'] ?? 'User',
+            'board_id'     => $rec['board_id'] ?? null,
+            'is_question'  => 0, // 👈 safe default; remove later when all views stop referencing it
         ];
         $tags     = $rec['tags'] ?? [];
         $comments = $rec['comments'] ?? [];
@@ -89,6 +90,7 @@ class PostController extends BaseController
                     'id' => $rec['id'], 'title' => $rec['title'], 'body' => $rec['body'],
                     'created_at' => $rec['created_at'], 'author' => $rec['author'] ?? 'User',
                     'board_id' => $rec['board_id'] ?? null,
+                    'is_question' => 0, // 👈 same safe default here
                 ];
                 $tags     = $rec['tags'] ?? [];
                 $comments = $rec['comments'] ?? [];
