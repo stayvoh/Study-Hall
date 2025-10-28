@@ -156,6 +156,7 @@ elseif ($uri === 'search') {
     (new SearchController())->index();
     exit;
 }
+
 // --- Tags ---
 elseif ($uri === 'tags') {
     (new TagController())->index();
@@ -172,8 +173,7 @@ elseif (preg_match('~^tag/([a-z0-9-]+)$~', $uri, $m)) {
     (new TagController())->show($m[1]);
     exit;
 }
-<<<<<<< Updated upstream
-=======
+
 elseif ($uri === 'api/tags/suggest') {
     (new TagController())->suggest();
     exit;
@@ -203,7 +203,6 @@ elseif ($uri === 'profile/followers') {
     (new ProfileController())->following();
     exit;
 } 
->>>>>>> Stashed changes
 
 // -------------------------------------------------------------
 // 404 Fallback
