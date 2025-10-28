@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 require_once __DIR__ . '/../models/Board.php';
@@ -17,11 +18,16 @@ class BoardController extends BaseController
 
     // GET /board?b=ID&page=N  (or /board/{id}?page=N depending on your router)
     public function show(int $id, int $page = 1): void {
-    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+    error_log("BoardController::show loading board id=" . $id . " page=" . $page);
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
     if (empty($_SESSION['csrf'])) {
         $_SESSION['csrf'] = bin2hex(random_bytes(16));
     }
 
+    // Fetch board
     $board = Board::findById($id);
     if (!$board) {
         http_response_code(404);
@@ -29,33 +35,41 @@ class BoardController extends BaseController
         return;
     }
 
+    // Pagination + posts
     $perPage = 20;
     $total   = Post::countByBoard($id);
     $posts   = Post::findByBoard($id, $perPage, ($page - 1) * $perPage);
     $pages   = max(1, (int)ceil($total / $perPage));
 
+    // Follow data
     $uid = (int)($_SESSION['uid'] ?? 0);
     $isFollowing   = $uid ? BoardFollow::isFollowing($uid, $id) : false;
     $followerCount = BoardFollow::followersCount($id);
 
+    // Render template
     $this->render('board_show', [
-        'board'          => $board,
-        'posts'          => $posts,
-        'page'           => $page,
-        'pages'          => $pages,
-        'isFollowing'    => $isFollowing,
-        'followerCount'  => $followerCount,
-        'csrf'           => $_SESSION['csrf'],
+        'board'         => $board,
+        'posts'         => $posts,
+        'page'          => $page,
+        'pages'         => $pages,
+        'isFollowing'   => $isFollowing,
+        'followerCount' => $followerCount,
+        'csrf'          => $_SESSION['csrf'],
     ]);
 }
 
+
     /** Small helper to send users back to where they came from (or to the board). */
     private function redirectBackToBoard(int $boardId): void {
-        $fallback = '/board?id=' . $boardId; // adjust to your route (e.g., '/boards/'.$boardId)
-        $to = $_SERVER['HTTP_REFERER'] ?? $fallback;
-        header('Location: ' . $to);
+    if (!empty($_POST['redirect'])) {
+        header('Location: ' . $_POST['redirect']);
         exit;
     }
+    $fallback = '/board?id=' . $boardId;
+    $to = $_SERVER['HTTP_REFERER'] ?? $fallback;
+    header('Location: ' . $to);
+    exit;
+}
 
     public function follow(int $boardId): void {
         require_login();

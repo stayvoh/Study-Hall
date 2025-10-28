@@ -17,16 +17,17 @@ class Board
     }
 
     public static function findById(int $id): ?array {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare(
-            'SELECT id, name, description 
-             FROM board 
-             WHERE id = ?'
-        );
-        $stmt->execute([$id]);
-        $row = $stmt->fetch();
-        return $row ?: null;
-    }
+    $pdo = Database::getConnection();
+    $stmt = $pdo->prepare(
+        'SELECT id, name, description, created_at 
+         FROM board 
+         WHERE id = ?'
+    );
+    $stmt->execute([$id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $row ?: null;
+}
+
 
     public static function create(string $name, ?string $desc): void {
         $pdo = Database::getConnection();

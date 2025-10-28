@@ -29,7 +29,7 @@
     <?php else: ?>
       <div class="list-group shadow-sm">
         <?php foreach ($boards as $b): ?>
-          <a class="list-group-item list-group-item-action p-3" href="/board?b=<?= (int)$b['id'] ?>">
+          <a class="list-group-item list-group-item-action p-3" href="/board?id=<?= (int)$b['id'] ?>">
             <div class="d-flex w-100 justify-content-between">
               <h2 class="h5 mb-1"><?= htmlspecialchars($b['name']) ?></h2>
               <small class="text-muted"><?= htmlspecialchars($b['created_at']) ?></small>
