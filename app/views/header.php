@@ -35,7 +35,7 @@ $excludeHeader = [
           <!-- Profile dropdown -->
           <div class="dropdown">
             <img 
-              src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.png') ?>" 
+              src="<?= htmlspecialchars($profilePicUrl ?? '/public/images/default-avatar.jpg') ?>" 
               alt="Profile Picture" 
               class="rounded-circle dropdown-toggle" 
               id="profileDropdown" 

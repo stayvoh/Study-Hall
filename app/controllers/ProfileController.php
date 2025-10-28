@@ -1,11 +1,7 @@
 <?php
 class ProfileController extends BaseController {
 
-    /**
-     * Display the user's profile (Instagram-style)
-     */
-    public function profile(): void
-    {
+    public function profile(): void{
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
@@ -15,16 +11,36 @@ class ProfileController extends BaseController {
             exit;
         }
 
-        // Load user profile
-        $profileModel = new Profile($this->db);
-        $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-        $profilePicUrl = '/profile/avatar'; // URL for avatar controller
+        $currentUserId = $_SESSION['uid'];
 
-        // Render profile view
-        $this->render('profile', [
-            'currentUser' => $currentUser,
-            'profilePicUrl' => $profilePicUrl
-        ]);
+    // Get the profile to view: either own or someone else's
+             $profileId = (int)($_GET['id'] ?? $currentUserId);
+
+            // Load profile
+            $profileModel = new Profile($this->db);
+            $currentUser = $profileModel->getProfileByUserId($profileId);
+            $followedBoards = $profileModel->getFollowedBoards($profileId);
+            $profilePicUrl = '/profile/avatar/' . $profileId;
+
+            // Only show follow/unfollow if viewing another user's profile
+            $isFollowing = false;
+            if ($profileId !== $currentUserId) {
+                $isFollowing = $profileModel->isFollowing($currentUserId, $profileId);
+            }
+
+            $followerCount = $profileModel->countFollowers($profileId);
+            $followingCount = $profileModel->countFollowing($profileId);
+
+            // Render profile view
+            $this->render('profile', [
+                'currentUser' => $currentUser,
+                'profilePicUrl' => $profilePicUrl,
+                'followedBoards' => $followedBoards,
+                'isFollowing' => $isFollowing,
+                'followerCount' => $followerCount,
+                'followingCount' => $followingCount,
+                'isOwnProfile' => $profileId === $currentUserId
+            ]);
     }
 
     /**
@@ -49,7 +65,7 @@ class ProfileController extends BaseController {
 
         if (!$profile || !$profile['profile_picture']) {
             header('Content-Type: image/png');
-            readfile('images/default-avatar.png');
+            readfile('/public/images/default-avatar.jpg');
             exit;
         }
 
@@ -89,6 +105,7 @@ class ProfileController extends BaseController {
             'profilePicUrl' => $profilePicUrl
         ]);
     }
+    
 
     /**
      * Handle updating the profile
