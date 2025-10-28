@@ -3,7 +3,7 @@
 if (!isset($currentUser) && isset($_SESSION['uid'])) {
     $profileModel = new Profile($this->db);
     $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid'];
+    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid']; // navbar only
 }
 
 // Detect current page
@@ -17,6 +17,9 @@ $excludeHeader = [
     'forgot',
     'reset',
 ];
+
+// Detect if we are on a profile page (any)
+$isProfilePage = str_starts_with($currentPath, 'profile');
 ?>
 
 <nav class="navbar navbar-dark bg-dark position-relative">

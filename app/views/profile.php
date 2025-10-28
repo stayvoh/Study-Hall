@@ -1,13 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="en" data-bs-theme="<?= htmlspecialchars($_COOKIE['theme'] ?? 'light') ?>">
 <head>
   <meta charset="UTF-8">
-  <title><?= htmlspecialchars($currentUser['username'] ?? 'Profile') ?> - Study Hall</title>
+  <title><?= htmlspecialchars($profile['username'] ?? 'Profile') ?> - Study Hall</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <style>
-    /* Cards, posts, and boards dark mode */
     [data-bs-theme="dark"] .bg-body-secondary { background-color: #2c2c2c !important; }
     [data-bs-theme="dark"] .border-secondary { border-color: #444 !important; }
     .ratio img { object-fit: cover; }
@@ -34,11 +32,11 @@ if (is_file($hdr)) include $hdr;
     </div>
     <div class="col-md-8">
       <div class="d-flex align-items-center mb-3 flex-wrap">
-        <h2 class="me-3 mb-0"><?= htmlspecialchars($currentUser['username'] ?? 'Unknown User') ?></h2>
+        <h2 class="me-3 mb-0"><?= htmlspecialchars($profile['username'] ?? 'Unknown User') ?></h2>
 
         <?php if (!$isOwnProfile): ?>
           <form method="POST" action="<?= $isFollowing ? '/profile/unfollow' : '/profile/follow' ?>" class="me-2">
-            <input type="hidden" name="profile_id" value="<?= $currentUser['id'] ?>">
+            <input type="hidden" name="profile_id" value="<?= $profile['user_id'] ?? $profile['id'] ?>">
             <button type="submit" class="btn <?= $isFollowing ? 'btn-outline-primary' : 'btn-primary' ?> btn-sm">
               <?= $isFollowing ? 'Unfollow' : 'Follow' ?>
             </button>
@@ -46,20 +44,24 @@ if (is_file($hdr)) include $hdr;
         <?php else: ?>
           <a href="/profile/edit" class="btn btn-outline-secondary btn-sm me-2">Edit profile</a>
         <?php endif; ?>
-
-        <button class="btn btn-outline-secondary btn-sm">
-          <i class="bi bi-gear"></i>
-        </button>
       </div>
 
       <div class="d-flex mb-3">
         <div class="me-4"><strong><?= $postCount ?? 0 ?></strong> posts</div>
-        <div class="me-4"><strong><?= $followerCount ?? 0 ?></strong> followers</div>
-        <div><strong><?= $followingCount ?? 0 ?></strong> following</div>
+
+        <div class="me-4">
+          <a href="/profile/followers?id=<?= $profile['user_id'] ?>">
+          <strong><?= $followerCount ?? 0 ?></strong> followers
+        </a>
+        </div>
+        <div>
+          <a href="/profile/following?id=<?= $profile['user_id'] ?>">
+          <strong><?= $followingCount ?? 0 ?></strong> following</div>
+        </a>
       </div>
 
       <div>
-        <span class="text-muted"><?= htmlspecialchars($currentUser['bio'] ?? 'This is your bio...') ?></span>
+        <span class="text-muted"><?= htmlspecialchars($profile['bio'] ?? 'This is the user bio...') ?></span>
       </div>
     </div>
   </div>
@@ -109,7 +111,7 @@ if (is_file($hdr)) include $hdr;
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <p class="text-muted">You’re not following any boards yet.</p>
+        <p class="text-muted">This user isn’t following any boards yet.</p>
       <?php endif; ?>
     </div>
   </div>
