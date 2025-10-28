@@ -1,47 +1,92 @@
 <?php
-class ProfileController extends BaseController {
+        class ProfileController extends BaseController {
 
-    public function profile(): void{
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+            public function profile(): void {
 
-        if (!isset($_SESSION['uid'])) {
-            header('Location: /login');
-            exit;
-        }
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
 
-        $currentUserId = $_SESSION['uid'];
+          
+            $loggedInUserId = $_SESSION['uid'] ?? 0;
 
-    // Get the profile to view: either own or someone else's
-             $profileId = (int)($_GET['id'] ?? $currentUserId);
+         
+            $profileId = (int)($_GET['id'] ?? $loggedInUserId); // if no ?id= use self
 
-            // Load profile
-            $profileModel = new Profile($this->db);
-            $currentUser = $profileModel->getProfileByUserId($profileId);
-            $followedBoards = $profileModel->getFollowedBoards($profileId);
-            $profilePicUrl = '/profile/avatar/' . $profileId;
-
-            // Only show follow/unfollow if viewing another user's profile
-            $isFollowing = false;
-            if ($profileId !== $currentUserId) {
-                $isFollowing = $profileModel->isFollowing($currentUserId, $profileId);
+            // 3. Fetch profile data
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                echo "Profile not found";
+                exit;
             }
 
+            // 4. Fetch counts
+            $postCount = $profileModel->countPosts($profileId);
             $followerCount = $profileModel->countFollowers($profileId);
             $followingCount = $profileModel->countFollowing($profileId);
 
-            // Render profile view
-            $this->render('profile', [
-                'currentUser' => $currentUser,
-                'profilePicUrl' => $profilePicUrl,
-                'followedBoards' => $followedBoards,
-                'isFollowing' => $isFollowing,
-                'followerCount' => $followerCount,
-                'followingCount' => $followingCount,
-                'isOwnProfile' => $profileId === $currentUserId
-            ]);
-    }
+            // 5. Fetch boards followed by this profile
+            $followedBoards = $profileModel->getFollowedBoards($profileId);
+
+            // 6. Check if logged-in user is viewing own profile
+            $isOwnProfile = $profileId === $loggedInUserId;
+
+            // 7. Check if logged-in user is following this profile
+            $isFollowing = !$isOwnProfile && $profileModel->isFollowing($loggedInUserId, $profileId);
+
+            // 8. Profile picture URL (use get_image.php)
+            $profilePicUrl = 'get_image.php?id=' . $profileId;
+
+            // 9. Include view
+            include __DIR__ . '/../views/profile.php';
+        }
+        
+        public function followers(): void {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            $profileId = (int)($_GET['id'] ?? $_SESSION['uid'] ?? 0);
+            if (!$profileId) {
+                http_response_code(400);
+                exit('Invalid user ID');
+            }
+
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
+
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                exit('Profile not found');
+            }
+
+            $followers = $profileModel->getFollowers($profileId);
+
+            include __DIR__ . '/../views/followers.php';
+        }
+
+        public function following(): void {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            $profileId = (int)($_GET['id'] ?? $_SESSION['uid'] ?? 0);
+            if (!$profileId) {
+                http_response_code(400);
+                exit('Invalid user ID');
+            }
+
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
+
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                exit('Profile not found');
+            }
+
+            $following = $profileModel->getFollowing($profileId);
+
+            include __DIR__ . '/../views/following.php';
+        }
+
 
     /**
      * Serve the profile avatar image
@@ -105,7 +150,44 @@ class ProfileController extends BaseController {
             'profilePicUrl' => $profilePicUrl
         ]);
     }
-    
+        public function follow(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $currentUserId = $_SESSION['uid'] ?? 0;
+        $profileId = (int)($_POST['profile_id'] ?? 0);
+
+        if (!$currentUserId || !$profileId) {
+            http_response_code(400);
+            exit('Invalid request');
+        }
+
+        $db = (new Database())->getConnection();
+        $profileModel = new Profile($db);
+        $profileModel->follow($currentUserId, $profileId);
+
+        // Redirect back to profile
+        header('Location: /profile?id=' . $profileId);
+        exit;
+       }
+
+    public function unfollow(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $currentUserId = $_SESSION['uid'] ?? 0;
+        $profileId = (int)($_POST['profile_id'] ?? 0);
+
+        if (!$currentUserId || !$profileId) {
+            http_response_code(400);
+            exit('Invalid request');
+        }
+
+        $db = (new Database())->getConnection();
+        $profileModel = new Profile($db);
+        $profileModel->unfollow($currentUserId, $profileId);
+
+        // Redirect back to profile
+        header('Location: /profile?id=' . $profileId);
+        exit;
+    }
+
 
     /**
      * Handle updating the profile
