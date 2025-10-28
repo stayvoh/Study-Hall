@@ -168,12 +168,42 @@ elseif ($uri === 'tag') { // /tag?slug=php
     exit;
 }
 
-// Pretty route: /tag/{slug}
-elseif (preg_match('#^tag/([^/]+)$#', $uri, $m)) {
-    $slug = $m[1];
-    (new TagController())->show($slug);
+elseif (preg_match('~^tag/([a-z0-9-]+)$~', $uri, $m)) {
+    (new TagController())->show($m[1]);
     exit;
 }
+<<<<<<< Updated upstream
+=======
+elseif ($uri === 'api/tags/suggest') {
+    (new TagController())->suggest();
+    exit;
+}
+
+elseif ($uri === 'profile/follow') {
+    if (!is_post()) { http_response_code(405); exit; }
+    $profileId = (int)($_POST['profile_id'] ?? 0);
+    $loggedInUserId = $_SESSION['uid'] ?? 0;
+    (new ProfileController())->follow($loggedInUserId, $profileId);
+    header("Location: /profile?id=$profileId");
+    exit;
+}
+
+elseif ($uri === 'profile/unfollow') {
+    if (!is_post()) { http_response_code(405); exit; }
+    $profileId = (int)($_POST['profile_id'] ?? 0);
+    $loggedInUserId = $_SESSION['uid'] ?? 0;
+    (new ProfileController())->unfollow($loggedInUserId, $profileId);
+    header("Location: /profile?id=$profileId");
+    exit;
+}
+elseif ($uri === 'profile/followers') {
+    (new ProfileController())->followers();
+    exit;
+} elseif ($uri === 'profile/following') {
+    (new ProfileController())->following();
+    exit;
+} 
+>>>>>>> Stashed changes
 
 // -------------------------------------------------------------
 // 404 Fallback

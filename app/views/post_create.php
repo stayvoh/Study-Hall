@@ -46,23 +46,10 @@ $sel = array_map('intval', $old['tags'] ?? []); // preselected tag IDs if we re-
     <!-- Tags -->
     <div class="mb-3">
       <label class="form-label">Tags</label>
-      <div class="row">
-        <?php foreach ($allTags as $t): ?>
-          <div class="col-6 col-md-4">
-            <div class="form-check mb-1">
-              <input class="form-check-input" type="checkbox" name="tags[]" value="<?= (int)$t['id'] ?>"
-                     id="tag<?= (int)$t['id'] ?>" <?= in_array((int)$t['id'], $sel, true) ? 'checked' : '' ?>>
-              <label class="form-check-label small" for="tag<?= (int)$t['id'] ?>">#<?= h($t['name']) ?></label>
-            </div>
-          </div>
-        <?php endforeach; ?>
-      </div>
-    </div>
-
-    <div class="mb-4">
-      <label class="form-label">Add new tags (comma-separated)</label>
-      <input type="text" class="form-control" name="new_tags" placeholder="e.g. calculus, dynamic programming"
-             value="<?= h($old['new_tags'] ?? '') ?>">
+      <input type="text"
+            class="form-control"
+            name="new_tags"
+            placeholder="e.g. help, php, etc">
     </div>
 
     <button class="btn btn-primary">Publish</button>

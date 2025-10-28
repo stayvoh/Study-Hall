@@ -23,39 +23,33 @@ class PostController extends BaseController
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
         if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
 
-        // Optional CSRF check if your view posts a token
-        $postedCsrf = (string)($_POST['csrf'] ?? '');
-        if (function_exists('csrf_token') && !hash_equals(csrf_token(), $postedCsrf)) {
-            $this->render('post_create', [
-                'boardId' => $boardId,
-                'error'   => 'Invalid request. Please try again.',
-                'old'     => [
-                    'title'       => (string)($_POST['title'] ?? ''),
-                    'body'        => (string)($_POST['body'] ?? ''),
-                    'is_question' => !empty($_POST['is_question']) ? 1 : 0,
-                ],
-            ]);
-            return;
-        }
-
-        $title = trim((string)($_POST['title'] ?? ''));
-        $body  = trim((string)($_POST['body'] ?? ''));
-        $isQ   = !empty($_POST['is_question']) ? 1 : 0; // still accepted, now safely ignored by model
+        $title    = trim($_POST['title'] ?? '');
+        $body     = trim($_POST['body']  ?? '');
+        $csvTags  = (string)($_POST['new_tags'] ?? ''); // comma-separated, from the form
+        $old = ['title' => $title, 'body' => $body, 'tags' => []];
 
         if ($title === '' || $body === '') {
-            $this->render('post_create', [
+            $this->render('post_create.php', [
                 'boardId' => $boardId,
-                'error'   => 'Title and body are required.',
-                'old'     => ['title' => $title, 'body' => $body, 'is_question' => $isQ],
+                'error'   => 'Title and body are required',
+                'old'     => $old,
             ]);
             return;
         }
 
-        // ✅ Back-compat: model accepts 5th arg but ignores it (DB column removed)
-        $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body, $isQ);
+        // Create post
+        $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body);
+
+        // Attach tags (create any missing)
+        $pdo = Database::getConnection();
+        $tagModel = new Tag($pdo);
+        $rows = $tagModel->ensureManyFromCsv($csvTags);
+        $tagModel->attachToPost($postId, array_column($rows, 'id'));
+
         header('Location: /post?id=' . $postId);
         exit;
     }
+
 
     public function show(int $id): void {
         $rec = Post::findOneWithMeta($id);
@@ -69,7 +63,7 @@ class PostController extends BaseController
             'created_at'   => $rec['created_at'],
             'author'       => $rec['author'] ?? 'User',
             'board_id'     => $rec['board_id'] ?? null,
-            'is_question'  => 0, // 👈 safe default; remove later when all views stop referencing it
+            'is_question'  => 0,
         ];
         $tags     = $rec['tags'] ?? [];
         $comments = $rec['comments'] ?? [];
@@ -90,7 +84,7 @@ class PostController extends BaseController
                     'id' => $rec['id'], 'title' => $rec['title'], 'body' => $rec['body'],
                     'created_at' => $rec['created_at'], 'author' => $rec['author'] ?? 'User',
                     'board_id' => $rec['board_id'] ?? null,
-                    'is_question' => 0, // 👈 same safe default here
+                    'is_question' => 0,
                 ];
                 $tags     = $rec['tags'] ?? [];
                 $comments = $rec['comments'] ?? [];
