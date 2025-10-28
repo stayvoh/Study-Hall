@@ -21,7 +21,6 @@ $boardId = (int)($post['board_id'] ?? 0);
   <div class="container py-4" style="max-width: 800px">
 
     <?php if ($boardId > 0): ?>
-      <!-- FIXED: always link back using ?id= which board_show expects -->
       <a class="btn btn-link mb-3" href="/board?id=<?= $boardId ?>">&larr; Back to Board</a>
     <?php else: ?>
       <a class="btn btn-link mb-3" href="/dashboard">&larr; Back to Dashboard</a>
