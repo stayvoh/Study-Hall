@@ -42,7 +42,7 @@ class PostController extends BaseController
         $body  = trim((string)($_POST['body'] ?? ''));
 
         if ($title === '' || $body === '') {
-            $this->render('post_create', [
+            $this->render('post_create.php', [
                 'boardId' => $boardId,
                 'error'   => 'Title and body are required.',
                 'old'     => ['title' => $title, 'body' => $body],

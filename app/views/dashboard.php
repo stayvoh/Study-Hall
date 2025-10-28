@@ -10,14 +10,13 @@
 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Bootstrap Icons (for sun/moon) -->
+  <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-body"><!-- bg-body adapts with theme -->
-
+<body class="bg-body">
 <?php
-  $hdr = __DIR__ . '/header.php';   // adjust path if your header lives in /views/partials/header.php
+  $hdr = __DIR__ . '/header.php';
   if (is_file($hdr)) include $hdr;
 ?>
 <section class="py-5 text-center">
@@ -26,20 +25,20 @@
     <p class="lead text-muted mb-4">Learn, Collaborate, Build Together</p>
 
     <!-- Unified Search -->
-    <form class="row g-2 justify-content-center" method="GET" action="/search" style="max-width:900px;margin:0 auto;">
-      <div class="col-12 col-md-6">
+    <form class="row g-2 justify-content-center" method="get" action="/search" style="max-width:900px;margin:0 auto;">
+      <div class="col-12 col-md-5">
         <input class="form-control form-control-lg me-2" type="search"
                name="q" placeholder="Search posts, users, or tags…" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
       </div>
       <div class="col-6 col-md-2">
         <?php $type = $_GET['type'] ?? 'posts'; ?>
-        <select class="form-select form-select-lg" name="type" aria-label="Result type">
+        <select class="form-select form-select-lg" name="type" aria-label="Result type" onchange="toggleTagField()">
           <option value="posts" <?= $type==='posts'?'selected':''; ?>>Posts</option>
           <option value="users" <?= $type==='users'?'selected':''; ?>>Users</option>
           <option value="tags"  <?= $type==='tags' ?'selected':''; ?>>Tags</option>
         </select>
       </div>
-      <div class="col-6 col-md-1 d-grid">
+      <div class="col-12 col-md-2 d-grid">
         <button class="btn btn-primary btn-lg" type="submit">Search</button>
       </div>
     </form>
@@ -79,12 +78,17 @@
   </div>
 <?php endif; ?>
 
-<!-- Theme toggle logic -->
-<!-- Bootstrap JS Bundle (includes Popper) -->
+<script>
+  // Enables/disables the tag filter depending on dropdown
+  function toggleTagField() {
+    const sel = document.querySelector('select[name="type"]');
+    const tag = document.getElementById('tagField');
+    if (!sel || !tag) return;
+    tag.disabled = (sel.value !== 'posts');
+  }
+  document.addEventListener('DOMContentLoaded', toggleTagField);
+</script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-
-
-
 </body>
 </html>

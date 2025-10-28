@@ -29,16 +29,21 @@ class Post
         return (int)$pdo->lastInsertId();
     }
 
-    /**
-     * Fetch a post and attach tags + comments for your PostController::show().
-     * Returns:
-     *  [
-     *    id, title, body, created_at, board_id,
-     *    author (username or email),
-     *    tags => [ ['id','name','slug'], ... ],
-     *    comments => [ ['id','body','created_at','author'], ... ],
-     *  ]
-     */
+    public static function findWithExtras(int $id): ?array {
+        $pdo = Database::getConnection();
+        $sql = "SELECT p.*, COALESCE(up.username, CONCAT('User #', p.created_by)) AS author
+                FROM post p
+                LEFT JOIN user_profile up ON up.user_id = p.created_by
+                WHERE p.id = :id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':id' => $id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ?: null;
+    }
+
+
+
+
     public static function findOneWithMeta(int $postId): ?array
         {
             $pdo = Database::getConnection();
