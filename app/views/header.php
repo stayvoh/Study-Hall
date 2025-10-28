@@ -1,9 +1,9 @@
 <?php
 // Make sure $currentUser is available, or fetch it if not
-if (!isset($currentUser) && isset($_SESSION['uid'])) {
+if (!isset($profilePicUrl) && isset($_SESSION['uid'])) {
     $profileModel = new Profile($this->db);
     $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid'];
+    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid']; // navbar only
 }
 
 // Detect the current page
@@ -17,6 +17,9 @@ $excludeHeader = [
     'forgot',
     'reset',
 ];
+
+// Detect if we are on a profile page (any)
+$isProfilePage = str_starts_with($currentPath, 'profile');
 ?>
 
 <nav class="navbar navbar-dark bg-dark">
@@ -27,38 +30,39 @@ $excludeHeader = [
     </button>
 
     <?php if (!in_array($currentPath, $excludeHeader, true)): ?>
-      <!-- Show navbar brand and profile dropdown on pages NOT excluded -->
-      <a class="navbar-brand" href="/dashboard">Study Hall</a>
+        <!-- Navbar brand -->
+        <a class="navbar-brand" href="/dashboard">Study Hall</a>
 
-      <div class="d-flex align-items-center">
-        <?php if (strpos($currentPath, 'profile') !== 0): ?>
-          <!-- Profile dropdown -->
-          <div class="dropdown">
-            <img 
-              src="<?= htmlspecialchars($profilePicUrl ?? '/public/images/default-avatar.jpg') ?>" 
-              alt="Profile Picture" 
-              class="rounded-circle dropdown-toggle" 
-              id="profileDropdown" 
-              data-bs-toggle="dropdown" 
-              style="width:40px; height:40px; cursor:pointer;"
-            >
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-              <li class="px-3 py-2">
-                <strong><?= htmlspecialchars($currentUser['username'] ?? 'User') ?></strong><br>
-                <small class="text-muted"><?= htmlspecialchars($currentUser['email'] ?? '') ?></small>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/profile">Profile</a></li>
-              <li><a class="dropdown-item" href="/settings">Settings</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="/logout">Logout</a></li>
-            </ul>
-          </div>
-        <?php else: ?>
-          <!-- Only show logout button on /profile page -->
-          <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-        <?php endif; ?>
-      </div>
+        <!-- Right-side buttons -->
+        <div class="d-flex ms-auto align-items-center">
+            <?php if (!$isProfilePage): ?>
+                <!-- Profile dropdown for non-profile pages -->
+                <div class="dropdown">
+                    <img 
+                        src="<?= htmlspecialchars($profilePicUrl ?? '/public/images/default-avatar.jpg') ?>" 
+                        alt="Profile Picture" 
+                        class="rounded-circle dropdown-toggle" 
+                        id="profileDropdown" 
+                        data-bs-toggle="dropdown" 
+                        style="width:40px; height:40px; cursor:pointer;"
+                    >
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
+                        <li class="px-3 py-2">
+                            <strong><?= htmlspecialchars($currentUser['username'] ?? 'User') ?></strong><br>
+                            <small class="text-muted"><?= htmlspecialchars($currentUser['email'] ?? '') ?></small>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/profile">Profile</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                    </ul>
+                </div>
+            <?php else: ?>
+                <!-- Back to Profile + Logout for any profile page -->
+                <a href="/profile" class="btn btn-outline-light btn-sm me-2">Back to Profile</a>
+                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+            <?php endif; ?>
+        </div>
     <?php endif; ?>
   </div>
 </nav>
@@ -66,44 +70,41 @@ $excludeHeader = [
 <!-- Theme toggle script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-  const root = document.documentElement;
-  const btn  = document.getElementById('themeToggle');
-  const icon = document.getElementById('themeIcon');
+    const root = document.documentElement;
+    const btn  = document.getElementById('themeToggle');
+    const icon = document.getElementById('themeIcon');
 
-  function setTheme(theme) {
-    root.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
-    document.cookie = "theme=" + theme + "; path=/; max-age=31536000";
-    updateIcon(theme);
-  }
-
-  function updateIcon(theme) {
-    if (!icon) return;
-    icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
-  }
-
-  // Initialize theme from cookie, localStorage, or system preference
-  const cookieTheme = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/)?.[1];
-  const storedTheme = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const initialTheme = cookieTheme || storedTheme || (prefersDark ? 'dark' : 'light');
-  setTheme(initialTheme);
-
-  // Toggle button click
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-      setTheme(nextTheme);
-    });
-  }
-
-  // React to system changes if user hasn’t chosen yet
-  try {
-    if (!storedTheme && window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        setTheme(e.matches ? 'dark' : 'light');
-      });
+    function setTheme(theme) {
+        root.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+        document.cookie = "theme=" + theme + "; path=/; max-age=31536000";
+        updateIcon(theme);
     }
-  } catch (_) {}
+
+    function updateIcon(theme) {
+        if (!icon) return;
+        icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+    }
+
+    const cookieTheme = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/)?.[1];
+    const storedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const initialTheme = cookieTheme || storedTheme || (prefersDark ? 'dark' : 'light');
+    setTheme(initialTheme);
+
+    if (btn) {
+        btn.addEventListener('click', () => {
+            const nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            setTheme(nextTheme);
+        });
+    }
+
+    try {
+        if (!storedTheme && window.matchMedia) {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+                setTheme(e.matches ? 'dark' : 'light');
+            });
+        }
+    } catch (_) {}
 });
 </script>
