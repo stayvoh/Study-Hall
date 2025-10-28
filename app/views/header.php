@@ -1,12 +1,12 @@
 <?php
-// Make sure $currentUser is available, or fetch it if not
+// Ensure $currentUser and profile picture are loaded
 if (!isset($currentUser) && isset($_SESSION['uid'])) {
     $profileModel = new Profile($this->db);
     $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid'];
+    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid']; // navbar only
 }
 
-// Detect the current page
+// Detect current page
 $currentPath = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
 // Pages where header elements (except theme toggle) should NOT appear
@@ -17,25 +17,40 @@ $excludeHeader = [
     'forgot',
     'reset',
 ];
+
+// Detect if we are on a profile page (any)
+$isProfilePage = str_starts_with($currentPath, 'profile');
 ?>
 
-<nav class="navbar navbar-dark bg-dark">
+<nav class="navbar navbar-dark bg-dark position-relative">
   <div class="container-fluid">
-    <!-- Theme toggle button ALWAYS visible -->
-    <button id="themeToggle" class="btn btn-outline-light btn-sm me-3" title="Toggle Theme">
+
+    <!-- Left cluster -->
+    <div class="d-flex align-items-center">
+      <!-- Sidebar toggle -->
+      <button class="btn btn-outline-light btn-sm me-2" type="button"
+              data-bs-toggle="offcanvas" data-bs-target="#sidebar" aria-controls="sidebar">
+        <i class="bi bi-list"></i>
+      </button>
+
+      <!-- Theme toggle -->
+      <button id="themeToggle" class="btn btn-outline-light btn-sm" title="Toggle Theme">
         <i id="themeIcon" class="bi bi-moon-stars"></i>
-    </button>
+      </button>
+    </div>
 
     <?php if (!in_array($currentPath, $excludeHeader, true)): ?>
-      <!-- Show navbar brand and profile dropdown on pages NOT excluded -->
-      <a class="navbar-brand" href="/dashboard">Study Hall</a>
+      <!-- Title always dead center -->
+      <a class="navbar-brand position-absolute top-50 start-50 translate-middle" href="/dashboard">
+        Study Hall
+      </a>
 
-      <div class="d-flex align-items-center">
+      <!-- Right cluster -->
+      <div class="d-flex align-items-center ms-auto">
         <?php if (strpos($currentPath, 'profile') !== 0): ?>
-          <!-- Profile dropdown -->
           <div class="dropdown">
             <img 
-              src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.png') ?>" 
+              src="<?= htmlspecialchars($profilePicUrl ?? '/public/images/default-avatar.jpg') ?>" 
               alt="Profile Picture" 
               class="rounded-circle dropdown-toggle" 
               id="profileDropdown" 
@@ -55,13 +70,35 @@ $excludeHeader = [
             </ul>
           </div>
         <?php else: ?>
-          <!-- Only show logout button on /profile page -->
           <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
         <?php endif; ?>
       </div>
     <?php endif; ?>
   </div>
 </nav>
+
+<!-- Offcanvas Sidebar -->
+<div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="sidebar" aria-labelledby="sidebarLabel">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="sidebarLabel">Followed Boards</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <?php if (!empty($followedBoards)): ?>
+      <ul class="list-group list-group-flush">
+        <?php foreach ($followedBoards as $board): ?>
+          <li class="list-group-item bg-dark text-white">
+            <a href="/board?id=<?= urlencode($board['id']) ?>" class="text-white text-decoration-none">
+              <?= htmlspecialchars($board['name']) ?>
+            </a>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    <?php else: ?>
+      <p class="text-muted px-3">You are not following any boards yet.</p>
+    <?php endif; ?>
+  </div>
+</div>
 
 <!-- Theme toggle script -->
 <script>
@@ -74,36 +111,31 @@ document.addEventListener('DOMContentLoaded', function () {
     root.setAttribute('data-bs-theme', theme);
     localStorage.setItem('theme', theme);
     document.cookie = "theme=" + theme + "; path=/; max-age=31536000";
-    updateIcon(theme);
+    if (icon) {
+      icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+    }
   }
 
-  function updateIcon(theme) {
-    if (!icon) return;
-    icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
-  }
+  if (!btn) return;
 
-  // Initialize theme from cookie, localStorage, or system preference
+  // Initialize theme
   const cookieTheme = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/)?.[1];
   const storedTheme = localStorage.getItem('theme');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const initialTheme = cookieTheme || storedTheme || (prefersDark ? 'dark' : 'light');
   setTheme(initialTheme);
 
-  // Toggle button click
-  if (btn) {
-    btn.addEventListener('click', () => {
-      const nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
-      setTheme(nextTheme);
+  // Button click
+  btn.addEventListener('click', () => {
+    const nextTheme = root.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+  });
+
+  // Watch system changes if no stored choice
+  if (!storedTheme && window.matchMedia) {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+      setTheme(e.matches ? 'dark' : 'light');
     });
   }
-
-  // React to system changes if user hasn’t chosen yet
-  try {
-    if (!storedTheme && window.matchMedia) {
-      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
-        setTheme(e.matches ? 'dark' : 'light');
-      });
-    }
-  } catch (_) {}
 });
 </script>

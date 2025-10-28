@@ -45,55 +45,75 @@ class Post
 
 
     public static function findOneWithMeta(int $postId): ?array
-    {
-        $pdo = Database::getConnection();
+        {
+            $pdo = Database::getConnection();
 
-        // Base post + board + author
-        $stmt = $pdo->prepare("
-            SELECT p.id, p.title, p.body, p.created_at, p.board_id,
-                   COALESCE(up.username, ua.email) AS author
-            FROM post p
-            JOIN user_account ua ON ua.id = p.created_by
-            LEFT JOIN user_profile up ON up.user_id = ua.id
-            WHERE p.id = :id
-            LIMIT 1
-        ");
-        $stmt->bindValue(':id', $postId, \PDO::PARAM_INT);
-        $stmt->execute();
-        $post = $stmt->fetch(\PDO::FETCH_ASSOC);
-        if (!$post) return null;
+            // Base post + board + author
+            $stmt = $pdo->prepare("
+                SELECT p.id, p.title, p.body, p.created_at, p.board_id, p.created_by,
+                    COALESCE(up.username, ua.email) AS author
+                FROM post p
+                JOIN user_account ua ON ua.id = p.created_by
+                LEFT JOIN user_profile up ON up.user_id = ua.id
+                WHERE p.id = :id
+                LIMIT 1
+            ");
+            $stmt->bindValue(':id', $postId, \PDO::PARAM_INT);
+            $stmt->execute();
+            $post = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$post) return null;
 
-        // Tags
-        $t = $pdo->prepare("
-            SELECT t.id, t.name, t.slug
-            FROM tag t
-            JOIN post_tag pt ON pt.tag_id = t.id
-            WHERE pt.post_id = :pid
-            ORDER BY t.name ASC
-        ");
-        $t->bindValue(':pid', $postId, \PDO::PARAM_INT);
-        $t->execute();
-        $tags = $t->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            // Tags
+            $t = $pdo->prepare("
+                SELECT t.id, t.name, t.slug
+                FROM tag t
+                JOIN post_tag pt ON pt.tag_id = t.id
+                WHERE pt.post_id = :pid
+                ORDER BY t.name ASC
+            ");
+            $t->bindValue(':pid', $postId, \PDO::PARAM_INT);
+            $t->execute();
+            $tags = $t->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-        // Comments
-        $c = $pdo->prepare("
-            SELECT c.id, c.body, c.created_at,
-                   COALESCE(up.username, ua.email) AS author
-            FROM comment c
-            JOIN user_account ua ON ua.id = c.created_by
-            LEFT JOIN user_profile up ON up.user_id = ua.id
-            WHERE c.post_id = :pid
-            ORDER BY c.created_at ASC
-        ");
-        $c->bindValue(':pid', $postId, \PDO::PARAM_INT);
-        $c->execute();
-        $comments = $c->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+            // Comments
+            $c = $pdo->prepare("
+                SELECT c.id, c.body, c.created_at, c.created_by,
+                    COALESCE(up.username, ua.email) AS author
+                FROM comment c
+                JOIN user_account ua ON ua.id = c.created_by
+                LEFT JOIN user_profile up ON up.user_id = ua.id
+                WHERE c.post_id = :pid
+                ORDER BY c.created_at ASC
+            ");
+            $c->bindValue(':pid', $postId, \PDO::PARAM_INT);
+            $c->execute();
+            $comments = $c->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-        $post['tags'] = $tags;
-        $post['comments'] = $comments;
+            $post['tags'] = $tags;
+            $post['comments'] = $comments;
 
-        return $post;
-    }
+            return $post;
+        }
+
+        public static function findByUser(int $userId, int $limit = 50): array {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare("
+                SELECT p.id, p.title, p.body, p.created_at, p.board_id,
+                     p.created_by,
+                    COALESCE(up.username, ua.email) AS author
+                FROM post p
+                JOIN user_account ua ON ua.id = p.created_by
+                LEFT JOIN user_profile up ON up.user_id = ua.id
+                WHERE p.created_by = :uid
+                ORDER BY p.created_at DESC
+                LIMIT :lim
+            ");
+            $stmt->bindValue(':uid', $userId, \PDO::PARAM_INT);
+            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+        }
+
 
     // (Optional helpers — safe to keep if other pages use them)
 

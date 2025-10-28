@@ -18,8 +18,8 @@ $profile = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$profile || !$profile['profile_picture']) {
     // No image uploaded, serve default
-    header('Content-Type: image/png');
-    readfile(__DIR__ . '/images/default_profile.png');
+    header('Content-Type: image/jpeg');
+    readfile(__DIR__ . '/../public/images/default-avatar.jpg');
     exit;
 }
 
