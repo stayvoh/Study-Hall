@@ -1,25 +1,29 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../core/Database.php';
+
 class Comment
 {
     public static function allByPost(int $postId): array {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            "SELECT c.id, c.body, c.created_at, ua.email AS author
+            "SELECT c.id, c.body, c.created_at, c.created_by,
+                    COALESCE(up.username, ua.email) AS author
              FROM comment c
-             JOIN user_account ua ON ua.id = c.user_id
+             JOIN user_account ua ON ua.id = c.created_by
+             LEFT JOIN user_profile up ON up.user_id = ua.id
              WHERE c.post_id = ?
              ORDER BY c.created_at ASC"
         );
         $stmt->execute([$postId]);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public static function create(int $postId, int $userId, string $body): void {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare(
-            "INSERT INTO comment (post_id, user_id, body)
+            "INSERT INTO comment (post_id, created_by, body)
              VALUES (?, ?, ?)"
         );
         $stmt->execute([$postId, $userId, $body]);

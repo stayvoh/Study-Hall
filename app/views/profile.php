@@ -84,17 +84,37 @@ if (is_file($hdr)) include $hdr;
 
   <div class="tab-content mt-3" id="profileTabsContent">
     <!-- Posts Tab -->
-    <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
-      <div class="row g-2">
-        <?php for ($i = 0; $i < 9; $i++): ?>
-          <div class="col-4">
-            <div class="ratio ratio-1x1 bg-body-secondary border border-secondary">
-              <img src="https://via.placeholder.com/300" class="w-100 h-100" alt="Post Image">
-            </div>
+     <!-- Posts Tab -->
+<div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+  <?php if (!empty($userPosts)): ?>
+    <div class="list-group">
+      <?php foreach ($userPosts as $post): ?>
+        <div class="list-group-item list-group-item-action mb-3 shadow-sm bg-body-secondary border border-secondary">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="mb-0"><?= htmlspecialchars($post['title']) ?></h5>
+            <small class="text-muted"><?= htmlspecialchars($post['created_at']) ?></small>
           </div>
-        <?php endfor; ?>
-      </div>
+          <div class="mb-2"><?= nl2br(htmlspecialchars($post['body'])) ?></div>
+          <small class="text-muted">by <?= htmlspecialchars($post['author'] ?? 'User') ?></small>
+
+          <?php if (!empty($post['tags'])): ?>
+            <div class="mt-2">
+              <?php foreach ($post['tags'] as $tag): ?>
+                <a href="/search?type=posts&tag=<?= urlencode($tag['slug']) ?>" class="badge rounded-pill text-bg-light border me-1">#<?= htmlspecialchars($tag['name']) ?></a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
+
+          <a href="/post?id=<?= (int)$post['id'] ?>" class="btn btn-sm btn-outline-primary mt-2">View Post</a>
+        </div>
+      <?php endforeach; ?>
     </div>
+  <?php else: ?>
+    <p class="text-muted">This user hasn't posted anything yet.</p>
+  <?php endif; ?>
+</div>
+
+
 
     <!-- Boards Tab -->
     <div class="tab-pane fade" id="boards" role="tabpanel" aria-labelledby="boards-tab">
