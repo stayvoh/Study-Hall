@@ -138,7 +138,14 @@ $followerCount = BoardFollow::followersCount($boardId);
           <div class="list-group-item list-group-item-action position-relative">
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1"><?= htmlspecialchars($p['title']) ?></h6>
-              <small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small>
+              <small class="text-muted">
+                <?php
+                  if (!empty($p['created_at'])) {
+                      $dt = new DateTime($p['created_at']);
+                      echo htmlspecialchars($dt->format('F j, Y g:i A')); // e.g., October 29, 2025 4:39 PM
+                  }
+                  ?>
+            </small>
             </div>
 
             <?php if (!empty($p['excerpt'])): ?>

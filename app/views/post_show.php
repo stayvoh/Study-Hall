@@ -42,7 +42,13 @@ $boardId = (int)($post['board_id'] ?? 0);
       <div class="card-body">
         <h2 class="h4 mb-1"><?= h($post['title']) ?></h2>
         <div class="text-muted small mb-3">
-          by <?= h($post['author'] ?? 'User') ?> • <?= h($post['created_at'] ?? '') ?>
+          by <?= h($post['author'] ?? 'User') ?> • 
+          <?php
+            if (!empty($post['created_at'])) {
+                $dt = new DateTime($post['created_at']);
+                echo h($dt->format('F j, Y g:i A')); // October 29, 2025 4:39 PM
+            }
+            ?>
           <?php if (!empty($post['created_by'])): ?>
             • <a href="/profile?id=<?= (int)$post['created_by'] ?>">View Profile</a>
           <?php endif; ?>
@@ -79,7 +85,12 @@ $boardId = (int)($post['board_id'] ?? 0);
                   • <a href="/profile?id=<?= (int)$c['created_by'] ?>">View Profile</a>
                 <?php endif; ?>
               </div>
-              <small class="text-muted"><?= h($c['created_at'] ?? '') ?></small>
+                <?php
+                if (!empty($c['created_at'])) {
+                    $dt = new DateTime($c['created_at']);
+                    echo '<small class="text-muted">' . h($dt->format('F j, Y g:i A')) . '</small>';
+                }
+                ?>
             </div>
             <div class="mt-2"><?= nl2br(h($c['body'] ?? '')) ?></div>
           </li>

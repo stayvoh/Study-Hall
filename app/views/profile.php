@@ -92,7 +92,13 @@ if (is_file($hdr)) include $hdr;
         <div class="list-group-item list-group-item-action mb-3 shadow-sm bg-body-secondary border border-secondary">
           <div class="d-flex justify-content-between align-items-center mb-2">
             <h5 class="mb-0"><?= htmlspecialchars($post['title']) ?></h5>
-            <small class="text-muted"><?= htmlspecialchars($post['created_at']) ?></small>
+            <small class="text-muted"><?php
+            if (!empty($post['created_at'])) {
+                $dt = new DateTime($post['created_at']);
+                echo htmlspecialchars($dt->format('F j, Y g:i A')); // e.g., October 29, 2025 4:39 PM
+            }
+            ?>
+          </small>
           </div>
           <div class="mb-2"><?= nl2br(htmlspecialchars($post['body'])) ?></div>
           <small class="text-muted">by <?= htmlspecialchars($post['author'] ?? 'User') ?></small>
