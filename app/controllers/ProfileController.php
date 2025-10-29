@@ -1,31 +1,98 @@
 <?php
-class ProfileController extends BaseController {
+        class ProfileController extends BaseController {
 
-    /**
-     * Display the user's profile (Instagram-style)
-     */
-    public function profile(): void
-    {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+            public function profile(): void {
+
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
+
+          
+            $loggedInUserId = $_SESSION['uid'] ?? 0;
+
+            $profileId = (int)($_GET['id'] ?? $loggedInUserId); // if no ?id= use self
+
+            // 3. Fetch profile data
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                echo "Profile not found";
+                exit;
+            }
+            $userPosts = Post::findByUser($profileId);
+
+
+            // 4. Fetch counts
+            $postCount = $profileModel->countPosts($profileId);
+            $followerCount = $profileModel->countFollowers($profileId);
+            $followingCount = $profileModel->countFollowing($profileId);
+
+            // 5. Fetch boards followed by this profile
+            $followedBoards = $profileModel->getFollowedBoards($profileId);
+
+            // 6. Check if logged-in user is viewing own profile
+            $isOwnProfile = $profileId === $loggedInUserId;
+
+            // 7. Check if logged-in user is following this profile
+            $isFollowing = !$isOwnProfile && $profileModel->isFollowing($loggedInUserId, $profileId);
+
+            // 8. Profile picture URL (use get_image.php)
+            $profilePicUrl = 'get_image.php?id=' . $profileId;
+
+            // 9. Include view
+            include __DIR__ . '/../views/profile.php';
+        }
+        
+        public function followers(): void {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            $profileId = (int)($_GET['id'] ?? $_SESSION['uid'] ?? 0);
+            if (!$profileId) {
+                http_response_code(400);
+                exit('Invalid user ID');
+            }
+
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
+
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                exit('Profile not found');
+            }
+
+             $search = trim($_GET['search'] ?? '');
+           $followers = $profileModel->getFollowers($profileId, $search);
+
+            include __DIR__ . '/../views/followers.php';
         }
 
-        if (!isset($_SESSION['uid'])) {
-            header('Location: /login');
-            exit;
+        public function following(): void {
+            if (session_status() === PHP_SESSION_NONE) session_start();
+
+            $profileId = (int)($_GET['id'] ?? $_SESSION['uid'] ?? 0);
+            if (!$profileId) {
+                http_response_code(400);
+                exit('Invalid user ID');
+            }
+            //for search support
+            $search = trim($_GET['search']??'');
+
+            $db = (new Database())->getConnection();
+            $profileModel = new Profile($db);
+
+            $profile = $profileModel->getProfileByUserId($profileId);
+            if (!$profile) {
+                http_response_code(404);
+                exit('Profile not found');
+            }
+            //return the specific follower 
+            $following = $profileModel->getFollowing($profileId, $search);
+            
+      
+
+            include __DIR__ . '/../views/following.php';
         }
 
-        // Load user profile
-        $profileModel = new Profile($this->db);
-        $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-        $profilePicUrl = '/profile/avatar'; // URL for avatar controller
-
-        // Render profile view
-        $this->render('profile', [
-            'currentUser' => $currentUser,
-            'profilePicUrl' => $profilePicUrl
-        ]);
-    }
 
     /**
      * Serve the profile avatar image
@@ -49,7 +116,7 @@ class ProfileController extends BaseController {
 
         if (!$profile || !$profile['profile_picture']) {
             header('Content-Type: image/png');
-            readfile('images/default-avatar.png');
+            readfile('/public/images/default-avatar.jpg');
             exit;
         }
 
@@ -89,6 +156,44 @@ class ProfileController extends BaseController {
             'profilePicUrl' => $profilePicUrl
         ]);
     }
+        public function follow(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $currentUserId = $_SESSION['uid'] ?? 0;
+        $profileId = (int)($_POST['profile_id'] ?? 0);
+
+        if (!$currentUserId || !$profileId) {
+            http_response_code(400);
+            exit('Invalid request');
+        }
+
+        $db = (new Database())->getConnection();
+        $profileModel = new Profile($db);
+        $profileModel->follow($currentUserId, $profileId);
+
+        // Redirect back to profile
+        header('Location: /profile?id=' . $profileId);
+        exit;
+       }
+
+    public function unfollow(): void {
+        if (session_status() === PHP_SESSION_NONE) session_start();
+        $currentUserId = $_SESSION['uid'] ?? 0;
+        $profileId = (int)($_POST['profile_id'] ?? 0);
+
+        if (!$currentUserId || !$profileId) {
+            http_response_code(400);
+            exit('Invalid request');
+        }
+
+        $db = (new Database())->getConnection();
+        $profileModel = new Profile($db);
+        $profileModel->unfollow($currentUserId, $profileId);
+
+        // Redirect back to profile
+        header('Location: /profile?id=' . $profileId);
+        exit;
+    }
+
 
     /**
      * Handle updating the profile
@@ -107,18 +212,21 @@ class ProfileController extends BaseController {
 
         $username = trim($_POST['username'] ?? '');
         $bio = trim($_POST['bio'] ?? '');
-
+        
         // Validate username
-        if (empty($username)) {
-            $error = "Username cannot be empty.";
-
+       if (empty($username) || $error = $this->checkProfanity([$username, $bio])) {
+    // Determine the error message
+            if (empty($username)) {
+                $error = "Username cannot be empty.";
+            } else {
+                $error = "Your username or bio contains inappropriate language.";
+            }
             // Fetch current profile for re-render
             $stmt = $this->db->prepare("SELECT username, bio FROM user_profile WHERE user_id = :id");
             $stmt->execute(['id' => $userId]);
             $profile = $stmt->fetch();
 
-           $profilePicUrl = '/get_image.php?id=' . $userId;
-
+            $profilePicUrl = '/get_image.php?id=' . $userId;
 
             $this->render('EditProfile', [
                 'currentUser' => $profile,
@@ -127,6 +235,7 @@ class ProfileController extends BaseController {
             ]);
             return;
         }
+
 
         // Handle profile picture upload
         $profilePicture = null;

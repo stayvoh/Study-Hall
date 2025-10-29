@@ -135,24 +135,37 @@ $followerCount = BoardFollow::followersCount($boardId);
     <?php if ($posts): ?>
       <div class="list-group shadow-sm">
         <?php foreach ($posts as $p): ?>
-          <a href="/post?id=<?= (int)$p['id'] ?>" class="list-group-item list-group-item-action">
+          <div class="list-group-item list-group-item-action position-relative">
             <div class="d-flex w-100 justify-content-between">
               <h6 class="mb-1"><?= htmlspecialchars($p['title']) ?></h6>
-              <small class="text-muted"><?= htmlspecialchars($p['created_at']) ?></small>
+              <small class="text-muted">
+                <?php
+                  if (!empty($p['created_at'])) {
+                      $dt = new DateTime($p['created_at']);
+                      echo htmlspecialchars($dt->format('F j, Y g:i A')); // e.g., October 29, 2025 4:39 PM
+                  }
+                  ?>
+            </small>
             </div>
+
             <?php if (!empty($p['excerpt'])): ?>
-              <p class="mb-1 text-muted"><?= htmlspecialchars($p['excerpt']) ?></p>
+              <div class="text-muted mb-2"><?= htmlspecialchars($p['excerpt']) ?></div>
             <?php endif; ?>
+
             <?php if (!empty($p['tags'])): ?>
-              <div class="mt-1">
+              <div class="d-flex flex-wrap gap-1 mt-0">
                 <?php foreach ($p['tags'] as $t): ?>
                   <a class="badge rounded-pill text-bg-light border me-1"
                      href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= htmlspecialchars($t['name']) ?></a>
                 <?php endforeach; ?>
               </div>
             <?php endif; ?>
+
             <div class="small text-muted mt-1">by <?= htmlspecialchars($p['author'] ?? 'User') ?></div>
-          </a>
+
+            <!-- Stretched link keeps whole item clickable without nesting anchors -->
+            <a href="/post?id=<?= (int)$p['id'] ?>" class="stretched-link" aria-label="Open post"></a>
+          </div>
         <?php endforeach; ?>
       </div>
       <?php

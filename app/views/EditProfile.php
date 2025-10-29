@@ -1,6 +1,3 @@
-<?php
-// Assuming $currentUser and $profilePicUrl are already set by the controller
-?>
 
 <!DOCTYPE html>
 <html lang="en">
@@ -9,8 +6,26 @@
   <title>Edit Profile - <?= htmlspecialchars($currentUser['username']) ?> | Study Hall</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    /* Cards and inputs adapt to dark mode */
+    [data-bs-theme="dark"] .card,
+    [data-bs-theme="dark"] .form-control {
+      background-color: #2c2c2c;
+      color: #e0e0e0;
+      border-color: #444;
+    }
+    [data-bs-theme="dark"] .form-control::placeholder {
+      color: #aaa;
+    }
+  </style>
 </head>
-<body class="bg-light">
+<body class="bg-body text-body">
+
+<?php
+// Include header/navbar
+$hdr = __DIR__ . '/header.php';
+if (is_file($hdr)) include $hdr;
+?>
 
 <div class="container mt-5" style="max-width: 900px;">
   <h2>Edit Profile</h2>
@@ -26,9 +41,8 @@
       <form method="POST" action="/profile/update" enctype="multipart/form-data">
         <div class="row align-items-center mb-3">
           <div class="col-md-4 text-center mb-3 mb-md-0">
-
             <img src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.png') ?>" 
-                 class="rounded-circle border border-2"
+                 class="rounded-circle border border-secondary"
                  style="width: 150px; height: 150px; object-fit: cover;" 
                  alt="Profile Picture">
             <div class="mt-2">

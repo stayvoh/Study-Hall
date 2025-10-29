@@ -2,58 +2,39 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../core/Database.php';
+require_once __DIR__ . '/../core/BaseController.php';
 require_once __DIR__ . '/../models/Tag.php';
 
-class TagController {
-    private function render(string $view, array $data = []): void {
-        extract($data, EXTR_SKIP);
-        require __DIR__ . '/../views/' . $view;
-    }
-
+class TagController extends BaseController {
     public function index(): void {
-        $db = Database::getConnection();
-        $tags = $db->query("
-            SELECT t.id, t.name, t.slug,
-                   (SELECT COUNT(*) FROM post_tag x WHERE x.tag_id = t.id) AS usage_count
-            FROM tag t
-            ORDER BY usage_count DESC, t.name ASC
-            LIMIT 200
-        ")->fetchAll() ?: [];
-
+        $db  = Database::getConnection();
+        $tag = new Tag($db);
+        $q   = (string)($_GET['q'] ?? '');
+        $tags = $tag->popular(200, $q);
         $this->render('tags.php', ['tags' => $tags]);
     }
 
     public function show(string $slug): void {
-        $db = Database::getConnection();
+        $db  = Database::getConnection();
+        $tag = (new Tag($db))->bySlug($slug);
+        if (!$tag) { http_response_code(404); echo "Tag not found"; return; }
 
-        $tagStmt = $db->prepare("SELECT id, name, slug FROM tag WHERE slug = :slug");
-        $tagStmt->execute([':slug' => $slug]);
-        $tag = $tagStmt->fetch();
-
-        if (!$tag) {
-            http_response_code(404);
-            echo 'Tag not found';
-            return;
-        }
-
-        $stmt = $db->prepare("
-            SELECT p.id, p.title, p.body, p.created_at,
-                   COALESCE(up.username, ua.email) AS author
-            FROM post p
-            JOIN user_account ua ON ua.id = p.user_id
-            LEFT JOIN user_profile up ON up.user_id = ua.id
-            WHERE EXISTS (
-                SELECT 1 FROM post_tag pt WHERE pt.post_id = p.id AND pt.tag_id = :tid
-            )
-            ORDER BY p.created_at DESC
-            LIMIT 50
-        ");
+        $sql = "SELECT p.id, p.title, p.body, p.created_at, p.board_id,
+                       COALESCE(up.username, CONCAT('User #', p.created_by)) AS author
+                FROM post_tag pt
+                JOIN post p ON p.id = pt.post_id
+                LEFT JOIN user_profile up ON up.user_id = p.created_by
+                WHERE pt.tag_id = :tid
+                ORDER BY p.created_at DESC
+                LIMIT 200";
+        $stmt = $db->prepare($sql);
         $stmt->execute([':tid' => $tag['id']]);
-        $posts = $stmt->fetchAll() ?: [];
+        $posts = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
 
         $this->render('tags_show.php', ['tag' => $tag, 'posts' => $posts]);
     }
 
+    // GET /api/tags/suggest?q=ph
     public function suggest(): void {
         header('Content-Type: application/json');
         $db  = Database::getConnection();

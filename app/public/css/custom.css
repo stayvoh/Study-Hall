@@ -47,3 +47,30 @@ a.login-link:hover {
     background-color: #5121fd;
     border-color: #5121fd;
 }
+.follower-card {
+    transition: transform 0.2s;
+}
+
+.follower-card:hover {
+    transform: scale(1.05);
+}
+
+.follower-avatar {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border: 2px solid #ddd;
+}
+
+.follower-username {
+    font-weight: 500;
+    margin-top: 5px;
+    font-size: 0.85rem;
+    color: #212529;
+    text-decoration: none;
+    display: block;
+}
+
+[data-bs-theme="dark"] .follower-username {
+    color: #eee;
+}
