@@ -17,7 +17,17 @@ if (is_file($hdr)) include $hdr;
 
 <div class="container mt-5" style="max-width: 900px;">
   <h2 class="text-center mb-4">Followers of <?= htmlspecialchars($profile['username']) ?></h2>
-
+    <form method="get" class="d-flex mb-4" role="search">
+    <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['id'] ?? '') ?>">
+    <input 
+        type="text" 
+        name="search" 
+        class="form-control me-2" 
+        placeholder="Search followers..." 
+        value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+    >
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+</form>
   <?php if (!empty($followers)): ?>
   <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       <?php foreach ($followers as $f): ?>
@@ -36,9 +46,15 @@ if (is_file($hdr)) include $hdr;
       </div>
       <?php endforeach; ?>
   </div>
-  <?php else: ?>
-      <p class="text-center text-muted">This user has no followers yet.</p>
-  <?php endif; ?>
+    <?php else: ?>
+        <p class="text-center text-muted">
+            <?php if (!empty($_GET['search'])): ?>
+                No followers found matching "<?= htmlspecialchars($_GET['search']) ?>"
+            <?php else: ?>
+                This user has no followers yet.
+            <?php endif; ?>
+        </p>
+    <?php endif; ?>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

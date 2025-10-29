@@ -17,6 +17,17 @@ if (is_file($hdr)) include $hdr;
 <div class="container mt-5" style="max-width: 900px;">
   <h2 class="text-center mb-4"><?= htmlspecialchars($profile['username']) ?> is Following</h2>
 
+    <form method="get" class="d-flex mb-4" role="search">
+    <input type="hidden" name="id" value="<?= htmlspecialchars($_GET['id'] ?? '') ?>">
+    <input 
+      type="text" 
+      name="search" 
+      class="form-control me-2" 
+      placeholder="Search followers..." 
+      value="<?= htmlspecialchars($_GET['search'] ?? '') ?>"
+    >
+    <button class="btn btn-outline-primary" type="submit">Search</button>
+  </form>
   <?php if (!empty($following)): ?>
   <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-6 g-3">
       <?php foreach ($following as $f): ?>
@@ -35,10 +46,27 @@ if (is_file($hdr)) include $hdr;
       </div>
       <?php endforeach; ?>
   </div>
-  <?php else: ?>
-      <p class="text-center text-muted">This user is not following anyone yet.</p>
+     <?php else: ?>
+    <?php if (!empty($_GET['search'])): ?>
+        <p class="text-center text-muted">No followers found matching "<?= htmlspecialchars($_GET['search']) ?>"</p>
+    <?php else: ?>
+        <p class="text-center text-muted">This user is not following anyone yet.</p>
+    <?php endif; ?>
   <?php endif; ?>
 </div>
+<script>
+function filterFollowing() {
+  const input = document.getElementById("searchInput");
+  const filter = input.value.toLowerCase();
+  const cards = document.querySelectorAll(".follower-card");
+
+  cards.forEach(card => {
+    const username = card.querySelector(".follower-username").textContent.toLowerCase();
+    const match = username.includes(filter);
+    card.parentElement.style.display = match ? "" : "none";
+  });
+}
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
