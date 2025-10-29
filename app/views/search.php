@@ -6,6 +6,7 @@ declare(strict_types=1);
 /** @var array  $results */
 /** @var int    $page */
 /** @var int    $limit */
+
 function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 $build = function($n){ $qv = $_GET; $qv['page'] = $n; return '/search?'.http_build_query($qv); };
 $prev = max(1, (int)$page - 1);
@@ -17,16 +18,10 @@ $next = (int)$page + 1;
   <meta charset="UTF-8">
   <title>Search · Study Hall</title>
 
-  <!-- Theme init BEFORE CSS to avoid flash -->
-  <script>
-    (function () {
-      const cookieTheme = document.cookie.match(/(?:^|;\s*)theme=(light|dark)/)?.[1];
-      const storedTheme = localStorage.getItem('theme');
-      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const theme = cookieTheme || storedTheme || (prefersDark ? 'dark' : 'light');
-      document.documentElement.setAttribute('data-bs-theme', theme);
-    })();
-  </script>
+  <?php
+  $themeInit = __DIR__ . '/theme-init.php';
+  if (is_file($themeInit)) include $themeInit;
+  ?>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
@@ -37,13 +32,16 @@ $next = (int)$page + 1;
 </head>
 <body class="bg-body">
 
-
+<?php
+  $hdr = __DIR__ . '/header.php';
+  if (is_file($hdr)) include $hdr;
+?>
 
 <section class="py-4">
   <div class="container" style="max-width:1000px;">
     <h3 class="fw-semibold mb-3">Search</h3>
 
-    <!-- Search bar (dropdown-only filter + optional tag slug) -->
+    <!-- Search bar -->
     <form class="row g-2 align-items-center mb-4" method="GET" action="/search">
       <div class="col-12 col-md-6">
         <input class="form-control" name="q" placeholder="Search posts, users, or tags…" value="<?= h($q ?? '') ?>">
@@ -56,7 +54,8 @@ $next = (int)$page + 1;
         </select>
       </div>
       <div class="col-6 col-md-2">
-        <input id="tagField" class="form-control" name="tag" placeholder="Filter by tag (slug)" value="<?= h($tag ?? '') ?>" <?= ($type!=='posts')?'disabled':''; ?>>
+        <input id="tagField" class="form-control" name="tag" placeholder="Filter by tag (slug)" 
+               value="<?= h($tag ?? '') ?>" <?= ($type!=='posts')?'disabled':''; ?>>
       </div>
       <div class="col-12 col-md-2 d-grid">
         <button class="btn btn-primary">Search</button>
@@ -112,7 +111,7 @@ $next = (int)$page + 1;
         </div>
       <?php endif; ?>
 
-    <?php else: /* tags */ ?>
+    <?php else: ?>
       <?php if (empty($results)): ?>
         <div class="alert alert-light border">No tags found.</div>
       <?php else: ?>
@@ -151,40 +150,17 @@ $next = (int)$page + 1;
   </div>
 </section>
 
-<!-- Theme toggle logic -->
 <script>
-(function () {
-  const root = document.documentElement;
-  const btn  = document.getElementById('themeToggle');
-  const icon = document.getElementById('themeIcon');
-  const label= document.getElementById('themeLabel');
-  function setTheme(theme) {
-    root.setAttribute('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
-    document.cookie = "theme=" + theme + "; path=/; max-age=31536000";
-    updateUI(theme);
-  }
-  function updateUI(theme) {
-    if (!icon || !label) return;
-    if (theme === 'dark') { icon.className = 'bi bi-sun'; label.textContent = 'Light'; }
-    else { icon.className = 'bi bi-moon-stars'; label.textContent = 'Dark'; }
-  }
-  updateUI(root.getAttribute('data-bs-theme') || 'light');
-  btn?.addEventListener('click', function () {
-    const next = (root.getAttribute('data-bs-theme') === 'dark') ? 'light' : 'dark';
-    setTheme(next);
-  });
 
-  // enable/disable tag field based on type
-  window.toggleTagField = function(){
+  function toggleTagField() {
     const sel = document.querySelector('select[name="type"]');
     const tag = document.getElementById('tagField');
     if (!sel || !tag) return;
     tag.disabled = (sel.value !== 'posts');
-  };
-  toggleTagField();
-})();
+  }
+  document.addEventListener('DOMContentLoaded', toggleTagField);
 </script>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
