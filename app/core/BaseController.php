@@ -1,7 +1,8 @@
 <?php
 class BaseController {
-    protected $db;
 
+    protected $db;
+    
     public function __construct() {
         $this->db = Database::getConnection(); // your PDO wrapper
     }
@@ -21,7 +22,13 @@ class BaseController {
     }
     require $path;
 }
-
+  protected function checkProfanity(array $fields): ?string {
+          require_once __DIR__ . '/../helpers/profanityFilter.php';
+        if (checkFieldsForProfanity($fields)) {
+            return "Input contains inappropriate language.";
+        }
+        return null;
+    }
     
 }
 ?>

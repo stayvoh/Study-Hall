@@ -86,30 +86,64 @@ class Profile {
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    public function getFollowers(int $userId): array {
-    $stmt = $this->db->prepare("
-        SELECT uf.follower_id AS user_id, up.username, up.profile_picture, up.mime_type
-        FROM user_follow uf
-        JOIN user_profile up ON uf.follower_id = up.user_id
-        WHERE uf.following_id = :uid
-        ORDER BY uf.created_at DESC
-    ");
-    $stmt->execute(['uid' => $userId]);
+   public function getFollowers($userId, $search = ''): array {
+    $sql = "
+        SELECT 
+            u.id AS user_id,
+            p.username,
+            p.profile_picture,
+            p.mime_type
+        FROM user_follow f
+        JOIN user_account u ON f.follower_id = u.id
+        JOIN user_profile p ON p.user_id = u.id
+        WHERE f.following_id = :uid
+    ";
+
+    if (!empty($search)) {
+        $sql .= " AND p.username LIKE :search";
+    }
+
+    $sql .= " ORDER BY p.username ASC";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+    if (!empty($search)) {
+        $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+    }
+    $stmt->execute();
+
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function getFollowing(int $userId): array {
-        $stmt = $this->db->prepare("
-            SELECT uf.following_id AS user_id, up.username, up.profile_picture, up.mime_type
-            FROM user_follow uf
-            JOIN user_profile up ON uf.following_id = up.user_id
-            WHERE uf.follower_id = :uid
-            ORDER BY uf.created_at DESC
-        ");
-        $stmt->execute(['uid' => $userId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
 
+    public function getFollowing($userId, $search = '')
+        {
+            $sql = "
+                SELECT 
+                    u.id AS user_id, 
+                    p.username
+                FROM user_follow f
+                JOIN user_account u ON f.following_id = u.id
+                JOIN user_profile p ON p.user_id = u.id
+                WHERE f.follower_id = :uid
+            ";
+
+            if (!empty($search)) {
+                $sql .= " AND p.username LIKE :search";
+            }
+
+            $sql .= " ORDER BY p.username ASC";
+
+            $stmt = $this->db->prepare($sql);
+            $stmt->bindValue(':uid', $userId, PDO::PARAM_INT);
+            if (!empty($search)) {
+                $stmt->bindValue(':search', '%' . $search . '%', PDO::PARAM_STR);
+            }
+            $stmt->execute();
+
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+            
 
 }
 ?>

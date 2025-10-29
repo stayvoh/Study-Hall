@@ -60,7 +60,8 @@
                 exit('Profile not found');
             }
 
-            $followers = $profileModel->getFollowers($profileId);
+             $search = trim($_GET['search'] ?? '');
+           $followers = $profileModel->getFollowers($profileId, $search);
 
             include __DIR__ . '/../views/followers.php';
         }
@@ -73,6 +74,8 @@
                 http_response_code(400);
                 exit('Invalid user ID');
             }
+            //for search support
+            $search = trim($_GET['search']??'');
 
             $db = (new Database())->getConnection();
             $profileModel = new Profile($db);
@@ -82,8 +85,10 @@
                 http_response_code(404);
                 exit('Profile not found');
             }
-
-            $following = $profileModel->getFollowing($profileId);
+            //return the specific follower 
+            $following = $profileModel->getFollowing($profileId, $search);
+            
+      
 
             include __DIR__ . '/../views/following.php';
         }
