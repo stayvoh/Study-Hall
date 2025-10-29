@@ -49,6 +49,16 @@ class PostController extends BaseController
             ]);
             return;
         }
+        // --- Profanity check ---
+        if ($this->checkProfanity([$title, $body])) {
+            $this->render('post_create.php', [
+                'boardId' => $boardId,
+                'error'   => 'Your post contains inappropriate language.',
+                'old'     => ['title' => $title, 'body' => $body],
+            ]);
+            return;
+        }
+
 
         $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body);
         header('Location: /post?id=' . $postId);
@@ -111,6 +121,24 @@ class PostController extends BaseController
 
         $body = trim((string)($_POST['body'] ?? ''));
         if ($body === '') { header('Location: /post?id=' . $id); exit; }
+        // --- Profanity check ---
+        if ($this->checkProfanity([$body])) {
+            $rec = Post::findOneWithMeta($id);
+            $post = [
+                'id' => $rec['id'],
+                'title' => $rec['title'],
+                'body' => $rec['body'],
+                'created_at' => $rec['created_at'],
+                'author' => $rec['author'] ?? 'User',
+                'board_id' => $rec['board_id'] ?? null,
+                'created_by' => $rec['created_by'] ?? 0,
+            ];
+            $tags = $rec['tags'] ?? [];
+            $comments = Comment::allByPost($id);
+            $error = 'Your comment contains inappropriate language.';
+            $this->render('post_show', compact('post','tags','comments','error'));
+            return;
+        }
 
         Comment::create($id, (int)$_SESSION['uid'], $body);
 
