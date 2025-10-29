@@ -26,6 +26,11 @@ class RegisterController extends BaseController {
             $this->render('register', ['error' => 'Passwords do not match']);
             return;
         }
+
+        if ($error = $this->checkProfanity([$username, $bio])) {
+        $this->render('register', ['error' => $error]);
+        return;
+    }
          $profilePic = null;
         $mimeType   = null;
 

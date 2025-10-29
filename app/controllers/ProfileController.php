@@ -212,18 +212,21 @@
 
         $username = trim($_POST['username'] ?? '');
         $bio = trim($_POST['bio'] ?? '');
-
+        
         // Validate username
-        if (empty($username)) {
-            $error = "Username cannot be empty.";
-
+       if (empty($username) || $error = $this->checkProfanity([$username, $bio])) {
+    // Determine the error message
+            if (empty($username)) {
+                $error = "Username cannot be empty.";
+            } else {
+                $error = "Your username or bio contains inappropriate language.";
+            }
             // Fetch current profile for re-render
             $stmt = $this->db->prepare("SELECT username, bio FROM user_profile WHERE user_id = :id");
             $stmt->execute(['id' => $userId]);
             $profile = $stmt->fetch();
 
-           $profilePicUrl = '/get_image.php?id=' . $userId;
-
+            $profilePicUrl = '/get_image.php?id=' . $userId;
 
             $this->render('EditProfile', [
                 'currentUser' => $profile,
@@ -232,6 +235,7 @@
             ]);
             return;
         }
+
 
         // Handle profile picture upload
         $profilePicture = null;
