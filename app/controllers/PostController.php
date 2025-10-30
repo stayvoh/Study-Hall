@@ -56,6 +56,19 @@ class PostController extends BaseController
             ]);
             return;
         }
+        if($this->checkProfanity([$title, $body])) {
+            $this->render('post_create', [
+                'boardId' => $boardId,
+                'error'   => 'Your post contains inappropriate language.',
+                'old'     => [
+                    'title'    => $title,
+                    'body'     => $body,
+                    'new_tags' => (string)($_POST['new_tags'] ?? ''),
+                    'tags'     => array_map('intval', $_POST['tags'] ?? []),
+                ],
+            ]);
+            return;
+        }
         $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body);
 
         $inputTagIds  = array_map('intval', $_POST['tags'] ?? []);
