@@ -180,8 +180,23 @@ $followerCount = BoardFollow::followersCount($boardId);
         </ul>
       </nav>
     <?php else: ?>
-      <div class="alert alert-light border">No posts yet in this board.</div>
+      <div class="alert alert-light border">No posts yet in this board</div>
+      <?php
+        $prev = max(1, $page - 1);
+        $next = $page + 1;
+      ?>
+      <nav class="mt-3">
+        <ul class="pagination">
+          <li class="page-item <?= $page<=1?'disabled':''; ?>">
+            <a class="page-link" href="<?= $build($prev) ?>">Prev</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="<?= $build($next) ?>">Next</a>
+          </li>
+        </ul>
+      </nav>
     <?php endif; ?>
+
   </div>
 </section>
 
