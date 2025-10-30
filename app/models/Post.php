@@ -114,6 +114,13 @@ class Post
             return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
         }
 
+        public static function deleteOwned(int $postId, int $userId): bool {
+            $pdo = Database::getConnection();
+            $stmt = $pdo->prepare('DELETE FROM post WHERE id = :id AND created_by = :uid');
+            return $stmt->execute([':id'=>$postId, ':uid'=>$userId]) && $stmt->rowCount() > 0;
+        }
+
+
 
     // (Optional helpers — safe to keep if other pages use them)
 
