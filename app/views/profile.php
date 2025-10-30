@@ -47,15 +47,16 @@ if (is_file($hdr)) include $hdr;
       </div>
 
       <div class="d-flex mb-3">
-        <div class="me-4"><strong><?= $postCount ?? 0 ?></strong> posts</div>
+        <div class="me-4"><strong><?= $postCount ?? 0 ?></strong> posts
+      </div>
 
         <div class="me-4">
-          <a href="/profile/followers?id=<?= $profile['user_id'] ?>">
+          <a href="/profile/followers?id=<?= $profile['user_id'] ?>" class="text-decoration-none">
           <strong><?= $followerCount ?? 0 ?></strong> followers
         </a>
         </div>
         <div>
-          <a href="/profile/following?id=<?= $profile['user_id'] ?>">
+          <a href="/profile/following?id=<?= $profile['user_id'] ?>" class="text-decoration-none">
           <strong><?= $followingCount ?? 0 ?></strong> following</div>
         </a>
       </div>

@@ -39,7 +39,7 @@
         </select>
       </div>
       <div class="col-12 col-md-2 d-grid">
-        <button class="btn btn-primary btn-lg" type="submit">Search</button>
+        <button class="btn btn-orange btn-lg" type="submit">Search</button>
       </div>
     </form>
   </div>

@@ -125,7 +125,7 @@ $followerCount = BoardFollow::followersCount($boardId);
         <?php endif; ?>
 
         <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back to boards</a>
-        <a class="btn btn-sm btn-primary" href="/post/create?b=<?= (int)$board['id'] ?>">New post</a>
+        <a class="btn btn-sm btn-orange" href="/post/create?b=<?= (int)$board['id'] ?>">New post</a>
       </div>
     </div>
 
@@ -156,7 +156,7 @@ $followerCount = BoardFollow::followersCount($boardId);
             <?php if (!empty($p['tags'])): ?>
               <div class="d-flex flex-wrap gap-1 mt-0">
                 <?php foreach ($p['tags'] as $t): ?>
-                  <a class="badge rounded-pill text-bg-light border me-1"
+                  <a class="badge rounded-pill text-bg-light border me-1 text-decoration-none"
                      href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= htmlspecialchars($t['name']) ?></a>
                 <?php endforeach; ?>
               </div>

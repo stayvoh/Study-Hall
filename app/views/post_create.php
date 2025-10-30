@@ -62,7 +62,7 @@ $sel = array_map('intval', $old['tags'] ?? []);
       <input type="text" class="form-control" name="new_tags" placeholder="e.g. help, php, etc">
     </div>
 
-    <button class="btn btn-primary">Publish</button>
+    <button class="btn btn-orange">Publish</button>
   </form>
 </div>
 

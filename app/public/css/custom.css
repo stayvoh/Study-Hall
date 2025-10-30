@@ -8,6 +8,27 @@
     border-color: #e6481d;
     color: #fff;
 }
+.btn-outline-orange {
+  color: #fd7e14 !important;
+  border-color: #fd7e14 !important;
+  background-color: transparent;
+}
+.btn-outline-orange:focus {
+  color: #fff !important;
+  background-color: #fd7e14 !important;
+  border-color: #fd7e14 !important;
+}
+.btn-outline-orange.active {
+  color: #fff !important;
+  background-color: #e36414 !important;
+  border-color: #e36414 !important;
+}
+.btn-outline-orange.disabled {
+  color: #fd7e14 !important;
+  background-color: transparent !important;
+  border-color: #fd7e14 !important;
+  opacity: .65;
+}
 .btn-green {
     background-color: #1ac742; /* darker green */
     border-color: #1ac742;

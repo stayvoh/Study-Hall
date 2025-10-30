@@ -43,7 +43,7 @@ $next = (int)$page + 1;
 
     <!-- Search bar -->
     <form class="row g-2 align-items-center mb-4" method="GET" action="/search">
-      <div class="col-12 col-md-6">
+      <div class="col-12 col-md-8">
         <input class="form-control" name="q" placeholder="Search posts, users, or tags…" value="<?= h($q ?? '') ?>">
       </div>
       <div class="col-6 col-md-2">
@@ -54,18 +54,19 @@ $next = (int)$page + 1;
         </select>
       </div>
       <div class="col-12 col-md-2 d-grid">
-        <button class="btn btn-primary">Search</button>
+        <button class="btn btn-orange">Search</button>
       </div>
     </form>
 
-    <!-- Results -->
-    <?php if ($type === 'posts'): ?>
-      <?php if (empty($results)): ?>
-        <div class="alert alert-light border">No posts found.</div>
-      <?php else: ?>
-        <div class="list-group shadow-sm">
-          <?php foreach ($results as $r): ?>
-            <a href="/post?id=<?= (int)$r['id'] ?>" class="list-group-item list-group-item-action search-card">
+  <!-- Results -->
+  <?php if ($type === 'posts'): ?>
+    <?php if (empty($results)): ?>
+      <div class="alert alert-light border">No posts found.</div>
+    <?php else: ?>
+      <div class="list-group shadow-sm">
+        <?php foreach ($results as $r): ?>
+          <div class="list-group-item search-card">
+            <a href="/post?id=<?= (int)$r['id'] ?>" class="stretched-link text-decoration-none text-reset">
               <div class="d-flex w-100 justify-content-between">
                 <h6 class="mb-1"><?= h($r['title']) ?></h6>
                 <small class="text-muted"><?= h($r['created_at'] ?? '') ?></small>
@@ -76,19 +77,21 @@ $next = (int)$page + 1;
               <?php if (!empty($r['body'])): ?>
                 <p class="mb-1 text-muted"><?= h(mb_strimwidth((string)$r['body'], 0, 160, '…')) ?></p>
               <?php endif; ?>
-              <?php if (!empty($r['tags'])): ?>
-                <div class="mt-1">
-                  <?php foreach ($r['tags'] as $t): ?>
-                    <a class="badge rounded-pill text-bg-light border me-1"
-                       href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= h($t['name']) 
-                    ?></a>
-                  <?php endforeach; ?>
-                </div>
-              <?php endif; ?>
             </a>
-          <?php endforeach; ?>
-        </div>
-      <?php endif; ?>
+            <?php if (!empty($r['tags'])): ?>
+              <div class="mt-1">
+                <?php foreach ($r['tags'] as $t): ?>
+                  <a class="badge rounded-pill text-bg-light border me-1 text-decoration-none"
+                    href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">
+                    #<?= h($t['name']) ?>
+                  </a>
+                <?php endforeach; ?>
+              </div>
+            <?php endif; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
 
     <?php elseif ($type === 'users'): ?>
       <?php if (empty($results)): ?>

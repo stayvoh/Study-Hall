@@ -63,7 +63,7 @@ $boardId = (int)($post['board_id'] ?? 0);
         <?php if (!empty($tags) && is_array($tags)): ?>
           <div class="mb-3">
             <?php foreach ($tags as $t): ?>
-              <a class="badge rounded-pill text-bg-light border me-1"
+              <a class="badge rounded-pill text-bg-light border me-1 text-decoration-none"
                  href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= h($t['name']) ?></a>
             <?php endforeach; ?>
           </div>
@@ -88,7 +88,11 @@ $boardId = (int)($post['board_id'] ?? 0);
               <div class="small text-muted">
                 By <?= h($c['author'] ?? 'User') ?>
                 <?php if (!empty($c['created_by'])): ?>
-                  • <a href="/profile?id=<?= (int)$c['created_by'] ?>">View Profile</a>
+                  <span class="mx-1 text-secondary">•</span>
+                  <a href="/profile?id=<?= (int)$c['created_by'] ?>"
+                    class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
+                    <i class="bi bi-person"></i> View Profile
+                  </a>
                 <?php endif; ?>
               </div>
                 <?php
@@ -116,7 +120,9 @@ $boardId = (int)($post['board_id'] ?? 0);
           <div class="mb-3">
             <textarea class="form-control" name="body" rows="4" required></textarea>
           </div>
-          <button class="btn btn-blue" type="submit">Post Comment</button>
+          <button class="btn btn-outline-primary px-3" type="submit">
+            <i class="bi bi-send me-1"></i> Post Comment
+          </button>
         </form>
       </div>
     </div>
