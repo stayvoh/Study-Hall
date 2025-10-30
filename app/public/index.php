@@ -34,6 +34,8 @@ require __DIR__ . '/../controllers/BoardController.php';
 require __DIR__ . '/../controllers/PostController.php';
 require __DIR__ . '/../controllers/SearchController.php';
 require __DIR__ . '/../controllers/TagController.php';
+require __DIR__ . '/../controllers/ChatController.php';
+
 
 // -------------------------------------------------------------
 // Helpers
@@ -226,7 +228,18 @@ elseif ($uri === 'profile/followers') {
 } elseif ($uri === 'profile/following') {
     (new ProfileController())->following();
     exit;
-} 
+} elseif ($uri === 'chat/token') {
+    $controller = new ChatController();
+    $controller->token();
+    exit;
+}
+elseif ($uri === 'chat') {
+     $controller = new ChatController();
+    $controller->chatPage(); // This sets all the variables and renders the view
+    exit;
+}
+
+
 
 // -------------------------------------------------------------
 // 404 Fallback
