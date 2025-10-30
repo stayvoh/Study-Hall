@@ -67,6 +67,26 @@ $isProfilePage = str_starts_with($currentPath, 'profile');
   </div>
 </nav>
 
+<style>
+  [data-bs-theme="dark"] {
+    --bs-body-bg: #1f2021ff;
+    --bs-card-bg: #1f2021ff;
+    --bs-list-group-bg: #1b1c1f;
+    --bs-border-color: #2a2b2f;
+    --bs-secondary-bg: #1a1b1f;
+    --bs-tertiary-bg: #202124;
+    --bs-body-color: #e3e3e6;
+    --bs-secondary-color: #c0c0c5;
+  }
+
+  [data-bs-theme="dark"] .card,
+  [data-bs-theme="dark"] .list-group-item,
+  [data-bs-theme="dark"] .alert-light {
+    background-color: var(--bs-card-bg) !important;
+    border-color: var(--bs-border-color) !important;
+  }
+</style>
+
 <!-- Theme toggle script -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {

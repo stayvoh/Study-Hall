@@ -120,7 +120,7 @@ $boardId = (int)($post['board_id'] ?? 0);
           <div class="mb-3">
             <textarea class="form-control" name="body" rows="4" required></textarea>
           </div>
-          <button class="btn btn-outline-primary px-3" type="submit">
+          <button class="btn btn-orange px-3" type="submit">
             <i class="bi bi-send me-1"></i> Post Comment
           </button>
         </form>
