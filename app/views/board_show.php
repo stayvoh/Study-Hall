@@ -66,10 +66,11 @@ $posts = array_map(function($r){
 }, $rows);
 
 // 5) Simple page builder that preserves query string
-$build = function(int $n) {
+$build = function (int $n) use ($boardId): string {
     $q = $_GET;
-    $q['page'] = $n;
-    return '/board_show.php?' . http_build_query($q);
+    $q['id']   = (int)$boardId;
+    $q['page'] = max(1, (int)$n);
+    return '/board?' . http_build_query($q);
 };
 
 // === FOLLOWING LOGIC ===
@@ -142,7 +143,7 @@ $followerCount = BoardFollow::followersCount($boardId);
                 <?php
                   if (!empty($p['created_at'])) {
                       $dt = new DateTime($p['created_at']);
-                      echo htmlspecialchars($dt->format('F j, Y g:i A')); // e.g., October 29, 2025 4:39 PM
+                      echo htmlspecialchars($dt->format('F j, Y g:i A'));
                   }
                   ?>
             </small>

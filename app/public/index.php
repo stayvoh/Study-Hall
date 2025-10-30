@@ -124,14 +124,14 @@ elseif ($uri === 'board/create') {
 }
 
 // --- Posts ---
-elseif ($uri === 'post') { // /post?id=123
+elseif ($uri === 'post') {
     $controller = new PostController();
     $id = (int)($_GET['id'] ?? 0);
     if (is_post()) $controller->comment($id); else $controller->show($id);
     exit;
 }
 
-elseif ($uri === 'post/create') { // /post/create?b=123
+elseif ($uri === 'post/create') {
     $controller = new PostController();
     $boardId = (int)($_GET['b'] ?? 0);
     if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
@@ -163,7 +163,7 @@ elseif ($uri === 'tags') {
     exit;
 }
 
-elseif ($uri === 'tag') { // /tag?slug=php
+elseif ($uri === 'tag') {
     $slug = (string)($_GET['slug'] ?? '');
     (new TagController())->show($slug);
     exit;
