@@ -32,7 +32,9 @@ $boardId = (int)($post['board_id'] ?? 0);
   <div class="container py-4" style="max-width: 800px">
 
     <?php if ($boardId > 0): ?>
-      <a class="btn btn-link mb-3" href="/board?id=<?= $boardId ?>">&larr; Back to Board</a>
+      <a href="/board?id=<?= $boardId ?>" class="btn btn-outline-secondary mb-3">
+        <i class="bi bi-arrow-left"></i> Back to Board
+      </a>
     <?php else: ?>
       <a class="btn btn-link mb-3" href="/dashboard">&larr; Back to Dashboard</a>
     <?php endif; ?>
