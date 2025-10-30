@@ -98,15 +98,24 @@ $next = (int)$page + 1;
           <?php foreach ($results as $u): ?>
             <div class="col-12 col-md-6">
               <div class="card shadow-sm h-100">
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                   <h6 class="card-title mb-1"><?= h($u['username'] ?: $u['email']) ?></h6>
-                  <div class="text-muted small">Joined <?= h($u['created_at'] ?? '') ?> • <?= h($u['email']) ?></div>
+                  <div class="text-muted small mb-3">
+                    Joined <?= h($u['created_at'] ?? '') ?> • <?= h($u['email']) ?>
+                  </div>
+                  <div class="mt-auto">
+                    <a href="/profile?id=<?= (int)$u['id'] ?>"
+                      class="btn btn-sm btn-outline-primary w-100">
+                      <i class="bi bi-person"></i> View Profile
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
           <?php endforeach; ?>
         </div>
       <?php endif; ?>
+
 
     <?php else: ?>
       <?php if (empty($results)): ?>
