@@ -52,7 +52,11 @@ $boardId = (int)($post['board_id'] ?? 0);
             }
             ?>
           <?php if (!empty($post['created_by'])): ?>
-            • <a href="/profile?id=<?= (int)$post['created_by'] ?>">View Profile</a>
+            <span class="mx-1 text-secondary">•</span>
+            <a href="/profile?id=<?= (int)$post['created_by'] ?>"
+              class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
+              <i class="bi bi-person"></i> View Profile
+            </a>
           <?php endif; ?>
         </div>
 
