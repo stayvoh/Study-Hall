@@ -53,10 +53,6 @@ $next = (int)$page + 1;
           <option value="tags"  <?= ($type==='tags') ?'selected':''; ?>>Tags</option>
         </select>
       </div>
-      <div class="col-6 col-md-2">
-        <input id="tagField" class="form-control" name="tag" placeholder="Filter by tag (slug)" 
-               value="<?= h($tag ?? '') ?>" <?= ($type!=='posts')?'disabled':''; ?>>
-      </div>
       <div class="col-12 col-md-2 d-grid">
         <button class="btn btn-primary">Search</button>
       </div>
@@ -84,7 +80,8 @@ $next = (int)$page + 1;
                 <div class="mt-1">
                   <?php foreach ($r['tags'] as $t): ?>
                     <a class="badge rounded-pill text-bg-light border me-1"
-                       href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= h($t['name']) ?></a>
+                       href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">#<?= h($t['name']) 
+                    ?></a>
                   <?php endforeach; ?>
                 </div>
               <?php endif; ?>
@@ -121,12 +118,11 @@ $next = (int)$page + 1;
               <div class="card shadow-sm h-100">
                 <div class="card-body d-flex flex-column">
                   <h6 class="card-title mb-1">
-                    <a class="text-decoration-none" href="/tag/<?= urlencode($t['slug']) ?>">#<?= h($t['name']) ?></a>
+                    <span class="text-decoration-none text-body-secondary">#<?= h($t['name']) ?></span>
                   </h6>
                   <div class="text-muted small mb-3"><?= (int)($t['usage_count'] ?? 0) ?> posts</div>
                   <div class="mt-auto d-flex gap-2">
                     <a class="btn btn-sm btn-outline-primary flex-fill" href="/search?type=posts&tag=<?= urlencode($t['slug']) ?>">Filter posts</a>
-                    <a class="btn btn-sm btn-outline-secondary flex-fill" href="/tag/<?= urlencode($t['slug']) ?>">View tag</a>
                   </div>
                 </div>
               </div>

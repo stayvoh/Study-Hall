@@ -31,8 +31,10 @@ class PostController extends BaseController
                 'boardId' => $boardId,
                 'error'   => 'Invalid request. Please try again.',
                 'old'     => [
-                    'title' => (string)($_POST['title'] ?? ''),
-                    'body'  => (string)($_POST['body'] ?? ''),
+                    'title'    => (string)($_POST['title'] ?? ''),
+                    'body'     => (string)($_POST['body'] ?? ''),
+                    'new_tags' => (string)($_POST['new_tags'] ?? ''), // preserve input
+                    'tags'     => array_map('intval', $_POST['tags'] ?? []),
                 ],
             ]);
             return;
@@ -42,28 +44,63 @@ class PostController extends BaseController
         $body  = trim((string)($_POST['body'] ?? ''));
 
         if ($title === '' || $body === '') {
-            $this->render('post_create.php', [
+            $this->render('post_create', [
                 'boardId' => $boardId,
                 'error'   => 'Title and body are required.',
-                'old'     => ['title' => $title, 'body' => $body],
+                'old'     => [
+                    'title'    => $title,
+                    'body'     => $body,
+                    'new_tags' => (string)($_POST['new_tags'] ?? ''),
+                    'tags'     => array_map('intval', $_POST['tags'] ?? []),
+                ],
             ]);
             return;
         }
-        // --- Profanity check ---
-        if ($this->checkProfanity([$title, $body])) {
-            $this->render('post_create.php', [
-                'boardId' => $boardId,
-                'error'   => 'Your post contains inappropriate language.',
-                'old'     => ['title' => $title, 'body' => $body],
-            ]);
-            return;
-        }
-
-
         $postId = Post::create($boardId, (int)$_SESSION['uid'], $title, $body);
+
+        $inputTagIds  = array_map('intval', $_POST['tags'] ?? []);
+        $inputTagText = trim((string)($_POST['new_tags'] ?? ''));
+
+        $inputTagNames = [];
+        if ($inputTagText !== '') {
+            $parts = preg_split('/[,\n]+/', $inputTagText) ?: [];
+            foreach ($parts as $p) {
+                $n = trim(preg_replace('/\s+/', ' ', $p));
+                if ($n !== '') $inputTagNames[$n] = true;
+            }
+        }
+
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+        try {
+            require_once __DIR__ . '/../models/Tag.php';
+            $tagModel = new Tag($pdo);
+
+            $allTagIds = [];
+            foreach ($inputTagIds as $tid) {
+                if ($tid > 0) $allTagIds[$tid] = true;
+            }
+
+            foreach (array_keys($inputTagNames) as $name) {
+                $t = $tagModel->ensure($name);
+                if (!empty($t['id'])) $allTagIds[(int)$t['id']] = true;
+            }
+
+            if ($allTagIds) {
+                $stmt = $pdo->prepare("INSERT IGNORE INTO post_tag (post_id, tag_id) VALUES (:pid, :tid)");
+                foreach (array_keys($allTagIds) as $tid) {
+                    $stmt->execute([':pid' => $postId, ':tid' => (int)$tid]);
+                }
+            }
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            $pdo->rollBack();
+        }
         header('Location: /post?id=' . $postId);
         exit;
     }
+
 
    public function show(int $id): void {
     $rec = Post::findOneWithMeta($id);

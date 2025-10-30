@@ -169,10 +169,6 @@ elseif ($uri === 'tag') { // /tag?slug=php
     exit;
 }
 
-elseif (preg_match('~^tag/([a-z0-9-]+)$~', $uri, $m)) {
-    (new TagController())->show($m[1]);
-    exit;
-}
 elseif ($uri === 'profile/follow') {
     if (!is_post()) { http_response_code(405); exit; }
     $profileId = (int)($_POST['profile_id'] ?? 0);
