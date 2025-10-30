@@ -69,7 +69,12 @@ $next = (int)$page + 1;
             <a href="/post?id=<?= (int)$r['id'] ?>" class="stretched-link text-decoration-none text-reset">
               <div class="d-flex w-100 justify-content-between">
                 <h6 class="mb-1"><?= h($r['title']) ?></h6>
-                <small class="text-muted"><?= h($r['created_at'] ?? '') ?></small>
+                <small class="text-muted"><?php
+                  if (!empty($r['created_at'])) {
+                      $dt = new DateTime($r['created_at']);
+                      echo htmlspecialchars($dt->format('F j, Y g:i A'));
+                  }
+                  ?></small>
               </div>
               <?php if (!empty($r['author'])): ?>
                 <div class="small text-muted mb-1">by <?= h($r['author']) ?></div>
@@ -104,7 +109,12 @@ $next = (int)$page + 1;
                 <div class="card-body d-flex flex-column">
                   <h6 class="card-title mb-1"><?= h($u['username'] ?: $u['email']) ?></h6>
                   <div class="text-muted small mb-3">
-                    Joined <?= h($u['created_at'] ?? '') ?> • <?= h($u['email']) ?>
+                    Joined <?php
+                  if (!empty($u['created_at'])) {
+                      $dt = new DateTime($u['created_at']);
+                      echo htmlspecialchars($dt->format('F j, Y g:i A'));
+                  }
+                  ?>• <?= h($u['email']) ?>
                   </div>
                   <div class="mt-auto">
                     <a href="/profile?id=<?= (int)$u['id'] ?>"
