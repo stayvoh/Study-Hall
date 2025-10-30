@@ -138,6 +138,16 @@ elseif ($uri === 'post/create') {
     exit;
 }
 
+elseif ($uri === 'post/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new PostController())->delete((int)($_GET['id'] ?? 0));
+    exit;
+}
+
+elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new PostController())->deleteComment((int)($_GET['id'] ?? 0));
+    exit;
+}
+
 // follow
 elseif (preg_match('#^boards/(\d+)/(follow|unfollow)$#', $uri, $m)) {
     $boardId = (int)$m[1];
