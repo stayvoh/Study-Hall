@@ -28,4 +28,17 @@ class Comment
         );
         $stmt->execute([$postId, $userId, $body]);
     }
+
+    public static function deleteOwned(int $commentId, int $userId): ?int {
+        $pdo = Database::getConnection();
+        $sel = $pdo->prepare('SELECT post_id FROM comment WHERE id = :id AND created_by = :uid');
+        $sel->execute([':id'=>$commentId, ':uid'=>$userId]);
+        $postId = $sel->fetchColumn();
+        if (!$postId) return null;
+
+        $del = $pdo->prepare('DELETE FROM comment WHERE id = :id AND created_by = :uid');
+        $del->execute([':id'=>$commentId, ':uid'=>$userId]);
+        return $del->rowCount() > 0 ? (int)$postId : null;
+    }
+
 }
