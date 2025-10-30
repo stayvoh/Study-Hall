@@ -1,6 +1,6 @@
 <?php declare(strict_types=1);
 /** @var array      $post      {id,title,body,created_at,author,board_id,created_by} */
-/** @var array      $comments  list of {author,created_at,body,created_by} */
+/** @var array      $comments  list of {id,author,created_at,body,created_by} */
 /** @var array|null $tags      optional list of {id,name,slug} */
 /** @var ?string    $error */
 
@@ -27,6 +27,7 @@ $boardId = (int)($post['board_id'] ?? 0);
   <?php
     $hdr = __DIR__ . '/header.php';
     if (is_file($hdr)) include $hdr;
+    if (session_status() !== PHP_SESSION_ACTIVE) session_start();
   ?>
 
   <div class="container py-4" style="max-width: 800px">
@@ -48,15 +49,26 @@ $boardId = (int)($post['board_id'] ?? 0);
           <?php
             if (!empty($post['created_at'])) {
                 $dt = new DateTime($post['created_at']);
-                echo h($dt->format('F j, Y g:i A')); // October 29, 2025 4:39 PM
+                echo h($dt->format('F j, Y g:i A'));
             }
-            ?>
+          ?>
           <?php if (!empty($post['created_by'])): ?>
             <span class="mx-1 text-secondary">•</span>
             <a href="/profile?id=<?= (int)$post['created_by'] ?>"
-              class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
+               class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
               <i class="bi bi-person"></i> View Profile
             </a>
+          <?php endif; ?>
+
+          <?php if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === (int)($post['created_by'] ?? 0)): ?>
+            <form method="post" action="/post/delete?id=<?= (int)$post['id'] ?>"
+                  class="d-inline ms-2"
+                  onsubmit="return confirm('Delete this post? This cannot be undone.');">
+              <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+              <button class="btn btn-sm btn-outline-danger py-0 px-2 align-baseline">
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </form>
           <?php endif; ?>
         </div>
 
@@ -84,24 +96,37 @@ $boardId = (int)($post['board_id'] ?? 0);
       <ul class="list-group mb-4 shadow-sm">
         <?php foreach ($comments as $c): ?>
           <li class="list-group-item">
-            <div class="d-flex justify-content-between">
+            <div class="d-flex justify-content-between align-items-center">
               <div class="small text-muted">
                 By <?= h($c['author'] ?? 'User') ?>
                 <?php if (!empty($c['created_by'])): ?>
                   <span class="mx-1 text-secondary">•</span>
                   <a href="/profile?id=<?= (int)$c['created_by'] ?>"
-                    class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
+                     class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
                     <i class="bi bi-person"></i> View Profile
                   </a>
                 <?php endif; ?>
               </div>
-                <?php
-                if (!empty($c['created_at'])) {
-                    $dt = new DateTime($c['created_at']);
-                    echo '<small class="text-muted">' . h($dt->format('F j, Y g:i A')) . '</small>';
-                }
-                ?>
+
+              <div class="d-flex align-items-center gap-2">
+                <?php if (!empty($c['created_at'])): ?>
+                  <?php $dt = new DateTime($c['created_at']); ?>
+                  <small class="text-muted"><?= h($dt->format('F j, Y g:i A')) ?></small>
+                <?php endif; ?>
+
+                <?php if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === (int)($c['created_by'] ?? 0)): ?>
+                  <form method="post" action="/comment/delete?id=<?= (int)($c['id'] ?? 0) ?>"
+                        class="d-inline"
+                        onsubmit="return confirm('Delete this comment?');">
+                    <input type="hidden" name="csrf" value="<?= h(csrf_token()) ?>">
+                    <button class="btn btn-sm btn-outline-danger py-0 px-2">
+                      <i class="bi bi-x-circle"></i> Delete
+                    </button>
+                  </form>
+                <?php endif; ?>
+              </div>
             </div>
+
             <div class="mt-2"><?= nl2br(h($c['body'] ?? '')) ?></div>
           </li>
         <?php endforeach; ?>
