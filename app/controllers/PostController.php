@@ -182,4 +182,45 @@ class PostController extends BaseController
         header('Location: /post?id=' . $id . '#c' . Database::getConnection()->lastInsertId());
         exit;
     }
+
+
+
+    public function delete(int $id): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
+
+        $postedCsrf = (string)($_POST['csrf'] ?? '');
+        if (function_exists('csrf_token') && !hash_equals(csrf_token(), $postedCsrf)) {
+            http_response_code(400); echo 'Invalid request'; return;
+        }
+
+        // find post for redirect target (board)
+        $rec = Post::findOneWithMeta($id);
+        if (!$rec) { http_response_code(404); echo 'Post not found'; return; }
+        $boardId = (int)($rec['board_id'] ?? 0);
+
+        if (!Post::deleteOwned($id, (int)$_SESSION['uid'])) {
+            http_response_code(403); echo 'Not allowed'; return;
+        }
+
+        header('Location: /board?id=' . $boardId);
+        exit;
+    }
+
+    public function deleteComment(int $id): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (empty($_SESSION['uid'])) { http_response_code(403); echo 'Login required'; return; }
+
+        $postedCsrf = (string)($_POST['csrf'] ?? '');
+        if (function_exists('csrf_token') && !hash_equals(csrf_token(), $postedCsrf)) {
+            http_response_code(400); echo 'Invalid request'; return;
+        }
+
+        $postId = Comment::deleteOwned($id, (int)$_SESSION['uid']);
+        if (!$postId) { http_response_code(403); echo 'Not allowed'; return; }
+
+        header('Location: /post?id=' . $postId);
+        exit;
+    }
+
 }
