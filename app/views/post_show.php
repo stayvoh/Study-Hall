@@ -61,6 +61,12 @@ $boardId = (int)($post['board_id'] ?? 0);
           <?php endif; ?>
 
           <?php if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === (int)($post['created_by'] ?? 0)): ?>
+            <a href="/post/edit?id=<?= (int)$post['id'] ?>"
+              class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline ms-2">
+              <i class="bi bi-pencil-square"></i> Edit
+            </a>
+
+
             <form method="post" action="/post/delete?id=<?= (int)$post['id'] ?>"
                   class="d-inline ms-2"
                   onsubmit="return confirm('Delete this post? This cannot be undone.');">

@@ -84,7 +84,6 @@ if (is_file($hdr)) include $hdr;
   </ul>
 
   <div class="tab-content mt-3" id="profileTabsContent">
-    <!-- Posts Tab -->
      <!-- Posts Tab -->
 <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
   <?php if (!empty($userPosts)): ?>

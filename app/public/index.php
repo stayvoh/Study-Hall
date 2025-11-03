@@ -147,6 +147,19 @@ elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     (new PostController())->deleteComment((int)($_GET['id'] ?? 0));
     exit;
 }
+elseif ($uri === 'post/edit') {
+    // GET /post/edit?id=123  -> show edit form
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->editPost($id);
+    exit;
+}
+
+elseif ($uri === 'post/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // POST /post/update?id=123 -> save changes
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->update($id);
+    exit;
+}
 
 // follow
 elseif (preg_match('#^boards/(\d+)/(follow|unfollow)$#', $uri, $m)) {
