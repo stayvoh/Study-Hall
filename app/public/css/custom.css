@@ -1,3 +1,4 @@
+/* === Button Styles === */
 .btn-orange {
     background-color: #fd5121;
     border-color: #fd5121;
@@ -8,81 +9,70 @@
     border-color: #e6481d;
     color: #fff;
 }
+
 .btn-outline-orange {
-  color: #fd7e14 !important;
-  border-color: #fd7e14 !important;
+  color: #e6481d !important;
+  border-color: #e6481d !important;
   background-color: transparent;
 }
-.btn-outline-orange:focus {
-  color: #fff !important;
-  background-color: #fd7e14 !important;
-  border-color: #fd7e14 !important;
-}
+.btn-outline-orange:focus,
+.btn-outline-orange:hover,
 .btn-outline-orange.active {
   color: #fff !important;
-  background-color: #e36414 !important;
-  border-color: #e36414 !important;
+  background-color: #e6481d !important;
+  border-color: #e6481d !important;
 }
 .btn-outline-orange.disabled {
-  color: #fd7e14 !important;
+  color: #e6481d !important;
   background-color: transparent !important;
-  border-color: #fd7e14 !important;
+  border-color: #e6481d !important;
   opacity: .65;
 }
+
 .btn-green {
-    background-color: #1ac742; /* darker green */
+    background-color: #1ac742;
     border-color: #1ac742;
     color: #fff;
 }
 .btn-green:hover {
-    background-color: #169b34; /* even darker on hover */
+    background-color: #169b34;
     border-color: #169b34;
     color: #fff;
 }
-a.forgot-link {
-    color: #5121fd;
-    text-decoration: none;
-}
-a.forgot-link:hover {
-    color: #3e19c5; /* darker purple on hover */
-    text-decoration: underline;
-}
-a.register-link {
-    color: #5121fd;
-    text-decoration: none;
-}
-a.register-link:hover {
-    color: #3e19c5; /* darker purple on hover */
-    text-decoration: underline;
-}
+
+/* === Link Styles === */
+a.forgot-link,
+a.register-link,
 a.login-link {
     color: #5121fd;
     text-decoration: none;
 }
+a.forgot-link:hover,
+a.register-link:hover,
 a.login-link:hover {
-    color: #3e19c5; /* darker purple on hover */
+    color: #3e19c5;
     text-decoration: underline;
 }
-/* Change checkbox color when checked */
+
+/* === Form Controls === */
 .form-check-input:checked {
     background-color: #5121fd;
     border-color: #5121fd;
 }
+
+/* === Follower Cards === */
 .follower-card {
     transition: transform 0.2s;
 }
-
 .follower-card:hover {
     transform: scale(1.05);
 }
-
 .follower-avatar {
     width: 80px;
     height: 80px;
     object-fit: cover;
     border: 2px solid #ddd;
 }
-
 .follower-username {
     font-weight: 500;
     margin-top: 5px;
@@ -91,7 +81,43 @@ a.login-link:hover {
     text-decoration: none;
     display: block;
 }
-
 [data-bs-theme="dark"] .follower-username {
     color: #eee;
+}
+
+/* === Orange Pagination (matches btn-orange) === */
+:root { --sh-orange: #e6481d; }
+
+/* Base pagination link */
+.pagination .page-link,
+[data-bs-theme="dark"] .pagination .page-link {
+  color: var(--sh-orange) !important;
+  border: 1px solid var(--sh-orange) !important;
+  background-color: transparent !important;
+  transition: all 0.2s ease-in-out;
+}
+
+/* Hover + active state */
+.pagination .page-link:hover,
+.pagination .page-item.active .page-link,
+[data-bs-theme="dark"] .pagination .page-link:hover,
+[data-bs-theme="dark"] .pagination .page-item.active .page-link {
+  color: #fff !important;
+  background-color: var(--sh-orange) !important;
+  border-color: var(--sh-orange) !important;
+}
+
+/* Disabled state */
+.pagination .page-item.disabled .page-link,
+[data-bs-theme="dark"] .pagination .page-item.disabled .page-link {
+  color: #aaa !important;
+  background-color: transparent !important;
+  border-color: #dee2e6 !important;
+  opacity: 0.65 !important;
+}
+
+/* Rounded edges like btns */
+.pagination .page-link {
+  border-radius: 0.375rem !important;
+  box-shadow: none !important;
 }
