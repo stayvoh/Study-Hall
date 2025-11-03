@@ -41,4 +41,22 @@ class Comment
         return $del->rowCount() > 0 ? (int)$postId : null;
     }
 
+    public static function deleteByBoardOwner(int $commentId, int $ownerUserId): bool {
+        $pdo = Database::getConnection();
+        $chk = $pdo->prepare('
+            SELECT 1
+            FROM comment c
+            JOIN post p ON p.id = c.post_id
+            JOIN board b ON b.id = p.board_id
+            WHERE c.id = :cid AND b.created_by = :uid
+            LIMIT 1
+        ');
+        $chk->execute([':cid'=>$commentId, ':uid'=>$ownerUserId]);
+        if (!$chk->fetchColumn()) return false;
+
+        $del = $pdo->prepare('DELETE FROM comment WHERE id = :cid');
+        $del->execute([':cid'=>$commentId]);
+        return $del->rowCount() > 0;
+    }
+
 }

@@ -49,7 +49,14 @@
 <?php if (!empty($boards) && is_array($boards)): ?>
 <div class="container mb-4" style="max-width: 1000px;">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">Boards</h4>
+    <div class="container-fluid px-0">
+      <div class="d-flex justify-content-between align-items-center mb-2" style="width:100%;">
+        <h4 class="mb-0">Boards</h4>
+        <a href="/board/create" class="btn btn-sm btn-orange">
+          <i class="bi bi-plus-lg"></i> Create Board
+        </a>
+      </div>
+    </div>
   </div>
 
   <div class="row g-3">
@@ -79,7 +86,7 @@
 <?php endif; ?>
 
 <script>
-  // Enables/disables the tag filter depending on dropdown
+  
   function toggleTagField() {
     const sel = document.querySelector('select[name="type"]');
     const tag = document.getElementById('tagField');

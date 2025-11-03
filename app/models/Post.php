@@ -165,5 +165,32 @@ class Post
         return $stmt->execute([':t'=>$title, ':b'=>$body, ':id'=>$id, ':u'=>$userId]) && $stmt->rowCount() > 0;
     }
 
+    public static function boardIdOf(int $postId): ?int {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare('SELECT board_id FROM post WHERE id = :id');
+        $stmt->execute([':id'=>$postId]);
+        $v = $stmt->fetchColumn();
+        return $v ? (int)$v : null;
+    }
+
+    public static function deleteByBoardOwner(int $postId, int $ownerUserId): bool {
+        $pdo = Database::getConnection();
+        $sql = 'DELETE p FROM post p INNER JOIN board b ON b.id = p.board_id
+                WHERE p.id = :pid AND b.created_by = :uid';
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute([':pid'=>$postId, ':uid'=>$ownerUserId]);
+        return $stmt->rowCount() > 0;
+    }
+
+    public static function deleteAllByBoardOwner(int $boardId, int $ownerUserId): void {
+        $pdo = Database::getConnection();
+        $pdo->beginTransaction();
+        $pdo->prepare('DELETE c FROM comment c INNER JOIN post p ON p.id=c.post_id INNER JOIN board b ON b.id=p.board_id WHERE b.id=:bid AND b.created_by=:uid')
+            ->execute([':bid'=>$boardId, ':uid'=>$ownerUserId]);
+        $pdo->prepare('DELETE p FROM post p INNER JOIN board b ON b.id=p.board_id WHERE b.id=:bid AND b.created_by=:uid')
+            ->execute([':bid'=>$boardId, ':uid'=>$ownerUserId]);
+        $pdo->commit();
+    }
+
 
 }
