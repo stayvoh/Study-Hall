@@ -323,9 +323,5 @@ class PostController extends BaseController
         exit;
     }
 
-    public static function updateOwned(int $id, int $userId, string $title, string $body): bool {
-        $pdo = Database::getConnection();
-        $stmt = $pdo->prepare('UPDATE post SET title = :t, body = :b WHERE id = :id AND created_by = :u');
-        return $stmt->execute([':t'=>$title, ':b'=>$body, ':id'=>$id, ':u'=>$userId]) && $stmt->rowCount() > 0;
-    }
+    
 }
