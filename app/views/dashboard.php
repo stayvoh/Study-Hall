@@ -18,6 +18,15 @@
 <?php
   $hdr = __DIR__ . '/header.php';
   if (is_file($hdr)) include $hdr;
+
+  // *** NEW: tiny url helper to preserve current query and swap 'page' ***
+  function dash_page_url(int $p): string {
+    $params = $_GET ?? [];
+    $params['page'] = $p;
+    // keep path stable (if you mount at /dashboard, this will still work)
+    $path = strtok($_SERVER['REQUEST_URI'], '?');
+    return $path . '?' . http_build_query($params);
+  }
 ?>
 <section class="py-5 text-center">
   <div class="container">
@@ -78,6 +87,54 @@
       </div>
     <?php endforeach; ?>
   </div>
+
+  <!-- *** NEW: Bootstrap pagination (only shows when we have multiple pages) *** -->
+  <?php if (!empty($pagination) && ($pagination['lastPage'] ?? 1) > 1): 
+    $page = (int)$pagination['page'];
+    $last = (int)$pagination['lastPage'];
+
+    $start = max(1, $page - 2);
+    $end   = min($last, $page + 2);
+    if ($end - $start < 4) {
+      if ($start === 1) { $end = min($last, $start + 4); }
+      if ($end === $last) { $start = max(1, $end - 4); }
+    }
+  ?>
+    <nav aria-label="Boards pagination" class="mt-3">
+      <ul class="pagination justify-content-center mb-0">
+        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page > 1 ? dash_page_url(1) : '#' ?>" aria-label="First">
+            <span aria-hidden="true">&laquo;&laquo;</span>
+          </a>
+        </li>
+        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page > 1 ? dash_page_url($page - 1) : '#' ?>" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <?php for ($i = $start; $i <= $end; $i++): ?>
+          <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+            <a class="page-link" href="<?= dash_page_url($i) ?>"><?= $i ?></a>
+          </li>
+        <?php endfor; ?>
+
+        <li class="page-item <?= $page >= $last ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page < $last ? dash_page_url($page + 1) : '#' ?>" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        <li class="page-item <?= $page >= $last ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page < $last ? dash_page_url($last) : '#' ?>" aria-label="Last">
+            <span aria-hidden="true">&raquo;&raquo;</span>
+          </a>
+        </li>
+      </ul>
+      <p class="text-center text-muted small mt-2 mb-0">
+        Showing page <?= $page ?> of <?= $last ?><?= isset($pagination['total']) ? ' · ' . (int)$pagination['total'] . ' boards' : '' ?>
+      </p>
+    </nav>
+  <?php endif; ?>
 </div>
 <?php else: ?>
   <div class="container mb-5" style="max-width: 1000px;">
@@ -86,7 +143,6 @@
 <?php endif; ?>
 
 <script>
-  
   function toggleTagField() {
     const sel = document.querySelector('select[name="type"]');
     const tag = document.getElementById('tagField');

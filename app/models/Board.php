@@ -48,4 +48,26 @@ class Board
         $stmt->execute([':id'=>$id, ':u'=>$userId]);
         return $stmt->rowCount() > 0;
     }
+
+    public static function countAll(): int {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->query('SELECT COUNT(*) FROM board');
+        return (int)$stmt->fetchColumn();
+    }
+
+    public static function listPage(int $limit, int $offset): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("
+            SELECT b.id, b.name, b.description,
+                (SELECT COUNT(*) FROM post p WHERE p.board_id = b.id) AS post_count
+            FROM board b
+            ORDER BY b.id DESC
+            LIMIT :lim OFFSET :off
+        ");
+        $stmt->bindValue(':lim', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':off', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
 }
