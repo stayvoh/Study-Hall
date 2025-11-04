@@ -113,7 +113,7 @@ if (is_file($hdr)) include $hdr;
 
           <a href="/post?id=<?= (int)$post['id'] ?>" 
             class="btn btn-outline-primary btn-sm py-0 px-2 align-baseline">
-            <i class="bi bi-box-arrow-up-right"></i> View
+            <i class="bi bi-box-arrow-up-right"></i>
           </a>
 
         </div>

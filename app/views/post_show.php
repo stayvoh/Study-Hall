@@ -94,7 +94,7 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
                 <?php if (!empty($c['created_by'])): ?>
                   <span class="mx-1 text-secondary">•</span>
                   <a href="/profile?id=<?= (int)$c['created_by'] ?>" class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
-                    <i class="bi bi-person"></i> View Profile
+                    <i class="bi bi-person"></i> 
                   </a>
                 <?php endif; ?>
 
