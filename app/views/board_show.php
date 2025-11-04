@@ -96,20 +96,20 @@ $followerCount = BoardFollow::followersCount($boardId);
         <?php if ($uid && (int)$board['created_by'] !== $uid): ?>
           <form method="post" action="/boards/<?= (int)$board['id'] ?>/<?= $isFollowing ? 'unfollow' : 'follow' ?>">
             <button type="submit" class="btn btn-sm <?= $isFollowing ? 'btn-outline-danger' : 'btn-outline-primary' ?>">
-              <i class="bi <?= $isFollowing ? 'bi-heartbreak' : 'bi-heart' ?>"></i><?= $isFollowing ? 'Unfollow' : 'Follow' ?>
+              <i class="bi <?= $isFollowing ? 'bi-heartbreak' : 'bi-heart' ?>"></i><?= $isFollowing ? '' : '' ?>
             </button>
           </form>
         <?php endif; ?>
 
         <?php if ($uid && (int)$board['created_by'] === $uid): ?>
-          <a class="btn btn-sm btn-outline-secondary" href="/board/edit?id=<?= (int)$board['id'] ?>"><i class="bi bi-pencil"></i> Edit</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/board/edit?id=<?= (int)$board['id'] ?>"><i class="bi bi-pencil"></i> </a>
           <form method="post" action="/board/delete?id=<?= (int)$board['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this board?');">
             <input type="hidden" name="csrf" value="<?= htmlspecialchars($csrf) ?>">
-            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Delete</button>
+            <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> </button>
           </form>
         <?php endif; ?>
 
-        <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back to boards</a>
+        <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Back</a>
         <a class="btn btn-sm btn-orange" href="/post/create?b=<?= (int)$board['id'] ?>">New post</a>
       </div>
     </div>

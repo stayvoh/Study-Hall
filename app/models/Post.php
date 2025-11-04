@@ -5,16 +5,12 @@ require_once __DIR__ . '/../core/Database.php';
 
 class Post
 {
-    /**
-     * Backward-compatible create(): accepts (boardId, userId, title, body, [isQuestion])
-     * The 5th argument is ignored (column removed) to avoid "too many args" fatals.
-     */
     public static function create(
         int $boardId,
         int $userId,
         string $title,
         string $body,
-        $isQuestion = null // 👈 compatibility shim: accept but IGNORE
+        $isQuestion = null
     ): int {
         $pdo = Database::getConnection();
         $stmt = $pdo->prepare("
@@ -41,88 +37,92 @@ class Post
         return $row ?: null;
     }
 
-
-
-
     public static function findOneWithMeta(int $postId): ?array
-        {
-            $pdo = Database::getConnection();
+    {
+        $pdo = Database::getConnection();
 
-            // Base post + board + author
-            $stmt = $pdo->prepare("
-                SELECT p.id, p.title, p.body, p.created_at, p.board_id, p.created_by,
-                    COALESCE(up.username, ua.email) AS author
-                FROM post p
-                JOIN user_account ua ON ua.id = p.created_by
-                LEFT JOIN user_profile up ON up.user_id = ua.id
-                WHERE p.id = :id
-                LIMIT 1
-            ");
-            $stmt->bindValue(':id', $postId, \PDO::PARAM_INT);
-            $stmt->execute();
-            $post = $stmt->fetch(\PDO::FETCH_ASSOC);
-            if (!$post) return null;
+        $stmt = $pdo->prepare("
+            SELECT p.id, p.title, p.body, p.created_at, p.board_id, p.created_by,
+                COALESCE(up.username, ua.email) AS author
+            FROM post p
+            JOIN user_account ua ON ua.id = p.created_by
+            LEFT JOIN user_profile up ON up.user_id = ua.id
+            WHERE p.id = :id
+            LIMIT 1
+        ");
+        $stmt->bindValue(':id', $postId, \PDO::PARAM_INT);
+        $stmt->execute();
+        $post = $stmt->fetch(\PDO::FETCH_ASSOC);
+        if (!$post) return null;
 
-            // Tags
-            $t = $pdo->prepare("
-                SELECT t.id, t.name, t.slug
-                FROM tag t
-                JOIN post_tag pt ON pt.tag_id = t.id
-                WHERE pt.post_id = :pid
-                ORDER BY t.name ASC
-            ");
-            $t->bindValue(':pid', $postId, \PDO::PARAM_INT);
-            $t->execute();
-            $tags = $t->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $t = $pdo->prepare("
+            SELECT t.id, t.name, t.slug
+            FROM tag t
+            JOIN post_tag pt ON pt.tag_id = t.id
+            WHERE pt.post_id = :pid
+            ORDER BY t.name ASC
+        ");
+        $t->bindValue(':pid', $postId, \PDO::PARAM_INT);
+        $t->execute();
+        $tags = $t->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-            // Comments
-            $c = $pdo->prepare("
-                SELECT c.id, c.body, c.created_at, c.created_by,
-                    COALESCE(up.username, ua.email) AS author
-                FROM comment c
-                JOIN user_account ua ON ua.id = c.created_by
-                LEFT JOIN user_profile up ON up.user_id = ua.id
-                WHERE c.post_id = :pid
-                ORDER BY c.created_at ASC
-            ");
-            $c->bindValue(':pid', $postId, \PDO::PARAM_INT);
-            $c->execute();
-            $comments = $c->fetchAll(\PDO::FETCH_ASSOC) ?: [];
+        $c = $pdo->prepare("
+            SELECT c.id, c.body, c.created_at, c.created_by,
+                COALESCE(up.username, ua.email) AS author
+            FROM comment c
+            JOIN user_account ua ON ua.id = c.created_by
+            LEFT JOIN user_profile up ON up.user_id = ua.id
+            WHERE c.post_id = :pid
+            ORDER BY c.created_at ASC
+        ");
+        $c->bindValue(':pid', $postId, \PDO::PARAM_INT);
+        $c->execute();
+        $comments = $c->fetchAll(\PDO::FETCH_ASSOC) ?: [];
 
-            $post['tags'] = $tags;
-            $post['comments'] = $comments;
+        $post['tags'] = $tags;
+        $post['comments'] = $comments;
 
-            return $post;
-        }
+        return $post;
+    }
 
-        public static function findByUser(int $userId, int $limit = 50): array {
-            $pdo = Database::getConnection();
-            $stmt = $pdo->prepare("
-                SELECT p.id, p.title, p.body, p.created_at, p.board_id,
-                     p.created_by,
-                    COALESCE(up.username, ua.email) AS author
-                FROM post p
-                JOIN user_account ua ON ua.id = p.created_by
-                LEFT JOIN user_profile up ON up.user_id = ua.id
-                WHERE p.created_by = :uid
-                ORDER BY p.created_at DESC
-                LIMIT :lim
-            ");
-            $stmt->bindValue(':uid', $userId, \PDO::PARAM_INT);
-            $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
-            $stmt->execute();
-            return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
-        }
+    public static function findByUser(int $userId, int $limit = 50): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("
+            SELECT p.id, p.title, p.body, p.created_at, p.board_id,
+                 p.created_by,
+                COALESCE(up.username, ua.email) AS author
+            FROM post p
+            JOIN user_account ua ON ua.id = p.created_by
+            LEFT JOIN user_profile up ON up.user_id = ua.id
+            WHERE p.created_by = :uid
+            ORDER BY p.created_at DESC
+            LIMIT :lim
+        ");
+        $stmt->bindValue(':uid', $userId, \PDO::PARAM_INT);
+        $stmt->bindValue(':lim', $limit, \PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
 
-        public static function deleteOwned(int $postId, int $userId): bool {
-            $pdo = Database::getConnection();
-            $stmt = $pdo->prepare('DELETE FROM post WHERE id = :id AND created_by = :uid');
-            return $stmt->execute([':id'=>$postId, ':uid'=>$userId]) && $stmt->rowCount() > 0;
-        }
+    public static function deleteOwned(int $postId, int $userId): bool {
+        $pdo = Database::getConnection();
 
+        $chk = $pdo->prepare("
+            SELECT 1
+            FROM post p
+            JOIN board b ON b.id = p.board_id
+            WHERE p.id = :pid AND (p.created_by = :uid OR b.created_by = :uid)
+            LIMIT 1
+        ");
+        $chk->execute([':pid' => $postId, ':uid' => $userId]);
+        if (!$chk->fetchColumn()) return false;
 
+        $pdo->prepare("DELETE FROM comment WHERE post_id = :pid")->execute([':pid' => $postId]);
 
-    // (Optional helpers — safe to keep if other pages use them)
+        $del = $pdo->prepare("DELETE FROM post WHERE id = :pid");
+        $del->execute([':pid' => $postId]);
+        return $del->rowCount() > 0;
+    }
 
     public static function countByBoard(int $boardId): int {
         $pdo = Database::getConnection();
@@ -174,12 +174,7 @@ class Post
     }
 
     public static function deleteByBoardOwner(int $postId, int $ownerUserId): bool {
-        $pdo = Database::getConnection();
-        $sql = 'DELETE p FROM post p INNER JOIN board b ON b.id = p.board_id
-                WHERE p.id = :pid AND b.created_by = :uid';
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([':pid'=>$postId, ':uid'=>$ownerUserId]);
-        return $stmt->rowCount() > 0;
+        return self::deleteOwned($postId, $ownerUserId);
     }
 
     public static function deleteAllByBoardOwner(int $boardId, int $ownerUserId): void {
@@ -191,6 +186,4 @@ class Post
             ->execute([':bid'=>$boardId, ':uid'=>$ownerUserId]);
         $pdo->commit();
     }
-
-
 }

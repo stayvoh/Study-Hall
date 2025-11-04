@@ -27,7 +27,7 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
   <div class="container py-4" style="max-width: 800px">
     <?php if ($boardId > 0): ?>
       <a href="/board?id=<?= $boardId ?>" class="btn btn-outline-secondary mb-3">
-        <i class="bi bi-arrow-left"></i> Back to Board
+        <i class="bi bi-arrow-left"></i> Back
       </a>
     <?php else: ?>
       <a class="btn btn-link mb-3" href="/dashboard">&larr; Back to Dashboard</a>
@@ -46,7 +46,7 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
             <?php if (!empty($post['created_by'])): ?>
               <span class="mx-1 text-secondary">•</span>
               <a href="/profile?id=<?= (int)$post['created_by'] ?>" class="btn btn-sm btn-outline-secondary py-0 px-2 align-baseline">
-                <i class="bi bi-person"></i> View Profile
+                <i class="bi bi-person"></i>
               </a>
             <?php endif; ?>
           </div>
@@ -54,15 +54,24 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
           <?php if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === (int)($post['created_by'] ?? 0)): ?>
             <div class="d-flex align-items-center gap-2">
               <a href="/post/edit?id=<?= (int)$post['id'] ?>" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-pencil-square"></i> Edit
+                <i class="bi bi-pencil"></i>
               </a>
               <form method="post" action="/post/delete?id=<?= (int)$post['id'] ?>" onsubmit="return confirm('Delete this post? This cannot be undone.');">
                 <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
                 <button type="submit" class="btn btn-sm btn-outline-danger">
-                  <i class="bi bi-trash"></i> Delete
+                  <i class="bi bi-trash"></i>
                 </button>
               </form>
             </div>
+          <?php endif; ?>
+
+          <?php if (!empty($isBoardOwner)): ?>
+            <form method="post" action="/post/delete?id=<?= (int)$post['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this post and all its comments?');">
+              <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
           <?php endif; ?>
         </div>
 
@@ -97,17 +106,20 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
                     <i class="bi bi-person"></i> View Profile
                   </a>
                 <?php endif; ?>
+
+                
+
               </div>
               <div class="d-flex align-items-center gap-2">
                 <?php if (!empty($c['created_at'])) { $dt = new DateTime($c['created_at']); ?>
                   <small class="text-muted"><?= h($dt->format('F j, Y g:i A')) ?></small>
                 <?php } ?>
 
-                <?php if (!empty($_SESSION['uid']) && (int)$_SESSION['uid'] === (int)($c['created_by'] ?? 0)): ?>
-                  <form method="post" action="/comment/delete?id=<?= (int)($c['id'] ?? 0) ?>" onsubmit="return confirm('Delete this comment?');">
+                <?php if (!empty($isBoardOwner) || ((int)($_SESSION['uid'] ?? 0) === (int)($c['created_by'] ?? 0))): ?>
+                  <form method="post" action="/comment/delete?id=<?= (int)$c['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this comment?');">
                     <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
-                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
-                      <i class="bi bi-x-circle"></i> Delete
+                    <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Delete comment">
+                      <i class="bi bi-trash"></i>
                     </button>
                   </form>
                 <?php endif; ?>

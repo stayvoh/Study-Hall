@@ -118,6 +118,8 @@ class PostController extends BaseController
     }
 
     public function show(int $id): void {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
         $rec = Post::findOneWithMeta($id);
         if (!$rec) { http_response_code(404); echo 'Post not found'; return; }
 
@@ -135,7 +137,14 @@ class PostController extends BaseController
         $tags     = $rec['tags'] ?? [];
         $comments = $rec['comments'] ?? [];
 
-        $this->render('post_show', compact('post','tags','comments'));
+        $uid = (int)($_SESSION['uid'] ?? 0);
+        $isBoardOwner = $uid && !empty($post['board_id']) ? Board::isOwnedBy((int)$post['board_id'], $uid) : false;
+
+        $_SESSION['csrf'] ??= bin2hex(random_bytes(16));
+
+        $this->render('post_show', compact('post','tags','comments','isBoardOwner') + [
+            'csrf' => $_SESSION['csrf']
+        ]);
     }
 
     public function comment(int $id): void {
