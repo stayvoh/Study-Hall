@@ -54,7 +54,9 @@ $next = (int)$page + 1;
         </select>
       </div>
       <div class="col-12 col-md-2 d-grid">
-        <button class="btn btn-orange">Search</button>
+        <button class="btn btn-orange">
+          <i class="bi bi-search"></i>
+        </button>
       </div>
     </form>
 
