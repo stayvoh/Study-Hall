@@ -31,7 +31,9 @@ $isProfilePage = str_starts_with($currentPath, 'profile');
 
     <?php if (!in_array($currentPath, $excludeHeader, true)): ?>
         <!-- Navbar brand -->
-        <a class="navbar-brand" href="/dashboard">Study Hall</a>
+        <a class="navbar-brand" href="/dashboard">
+            <img src="/images/SHIcon.png" alt="Study Hall" height="50">
+        </a>
 
         <!-- Right-side buttons -->
         <div class="d-flex ms-auto align-items-center">
