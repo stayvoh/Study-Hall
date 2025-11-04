@@ -123,6 +123,16 @@ elseif ($uri === 'board/create') {
     exit;
 }
 
+elseif ($uri === 'board/edit') {
+    (new BoardController())->editForm((int)($_GET['id'] ?? 0)); exit;
+}
+elseif ($uri === 'board/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new BoardController())->update((int)($_GET['id'] ?? 0)); exit;
+}
+elseif ($uri === 'board/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new BoardController())->delete((int)($_GET['id'] ?? 0)); exit;
+}
+
 // --- Posts ---
 elseif ($uri === 'post') {
     $controller = new PostController();
@@ -145,6 +155,19 @@ elseif ($uri === 'post/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     (new PostController())->deleteComment((int)($_GET['id'] ?? 0));
+    exit;
+}
+elseif ($uri === 'post/edit') {
+    // GET /post/edit?id=123  -> show edit form
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->editPost($id);
+    exit;
+}
+
+elseif ($uri === 'post/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // POST /post/update?id=123 -> save changes
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->update($id);
     exit;
 }
 
@@ -232,7 +255,13 @@ elseif ($uri === 'profile/followers') {
 } elseif ($uri === 'profile/following') {
     (new ProfileController())->following();
     exit;
-} 
+}
+
+elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+    (new PostController())->deleteComment($id);
+    exit;
+}
 
 // -------------------------------------------------------------
 // 404 Fallback

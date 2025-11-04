@@ -42,7 +42,7 @@ if (is_file($hdr)) include $hdr;
             </button>
           </form>
         <?php else: ?>
-          <a href="/profile/edit" class="btn btn-outline-secondary btn-sm me-2">Edit profile</a>
+          <a href="/profile/edit" class="btn btn-outline-secondary btn-sm bi-pencil"></a>
         <?php endif; ?>
       </div>
 
@@ -84,7 +84,6 @@ if (is_file($hdr)) include $hdr;
   </ul>
 
   <div class="tab-content mt-3" id="profileTabsContent">
-    <!-- Posts Tab -->
      <!-- Posts Tab -->
 <div class="tab-pane fade show active" id="posts" role="tabpanel" aria-labelledby="posts-tab">
   <?php if (!empty($userPosts)): ?>
@@ -112,7 +111,11 @@ if (is_file($hdr)) include $hdr;
             </div>
           <?php endif; ?>
 
-          <a href="/post?id=<?= (int)$post['id'] ?>" class="btn btn-sm btn-outline-primary mt-2">View Post</a>
+          <a href="/post?id=<?= (int)$post['id'] ?>" 
+            class="btn btn-outline-primary btn-sm py-0 px-2 align-baseline">
+            <i class="bi bi-box-arrow-up-right"></i> View
+          </a>
+
         </div>
       <?php endforeach; ?>
     </div>
