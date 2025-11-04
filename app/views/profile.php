@@ -42,7 +42,7 @@ if (is_file($hdr)) include $hdr;
             </button>
           </form>
         <?php else: ?>
-          <a href="/profile/edit" class="btn btn-outline-secondary btn-sm me-2">Edit profile</a>
+          <a href="/profile/edit" class="btn btn-outline-secondary btn-sm bi-pencil"></a>
         <?php endif; ?>
       </div>
 
