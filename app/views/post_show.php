@@ -64,6 +64,17 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
               </form>
             </div>
           <?php endif; ?>
+
+          <?php if (!empty($isBoardOwner)): ?>
+            <form method="post" action="/post/delete?id=<?= (int)$post['id'] ?>" class="d-inline" onsubmit="return confirm('Delete this post and all its comments?');">
+              <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i>
+              </button>
+            </form>
+          <?php endif; ?>
+
+
         </div>
 
         <?php if (!empty($tags) && is_array($tags)): ?>
@@ -97,8 +108,6 @@ $csrf = function_exists('csrf_token') ? csrf_token() : $_SESSION['csrf'];
                     <i class="bi bi-person"></i> 
                   </a>
                 <?php endif; ?>
-
-                
 
               </div>
               <div class="d-flex align-items-center gap-2">
