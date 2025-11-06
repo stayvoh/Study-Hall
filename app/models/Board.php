@@ -70,4 +70,17 @@ class Board
         return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
     }
 
+    public static function getCreatedBoards(int $userId): array {
+        $pdo = Database::getConnection();
+        $stmt = $pdo->prepare("
+            SELECT b.id, b.name, b.description, b.created_at,
+                (SELECT COUNT(*) FROM post p WHERE p.board_id = b.id) AS post_count
+            FROM board b
+            WHERE b.created_by = :user_id
+            ORDER BY b.created_at DESC
+        ");
+        $stmt->execute([':user_id' => $userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+    }
+
 }

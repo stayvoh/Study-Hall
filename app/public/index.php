@@ -34,6 +34,7 @@ require __DIR__ . '/../controllers/BoardController.php';
 require __DIR__ . '/../controllers/PostController.php';
 require __DIR__ . '/../controllers/SearchController.php';
 require __DIR__ . '/../controllers/TagController.php';
+require __DIR__ . '/../controllers/MessageController.php';
 
 // -------------------------------------------------------------
 // Helpers
@@ -260,6 +261,39 @@ elseif ($uri === 'profile/followers') {
 elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
     (new PostController())->deleteComment($id);
+    exit;
+}
+// --- Messages ---
+elseif ($uri === 'messages') {
+    // Render the messages view (UI page)
+    (new MessageController())->index();
+    exit;
+}
+
+// --- Message API ---
+elseif ($uri === 'messages/send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new MessageController())->send();
+    exit;
+}
+
+elseif ($uri === 'messages/getOrCreate') {
+    // AJAX endpoint to get or create a conversation between two users
+    (new MessageController())->getOrCreate();
+    exit;
+}
+
+elseif ($uri === 'messages/poll') {
+    (new MessageController())->poll();
+    exit;
+}
+
+elseif ($uri === 'messages/conversations') {
+    (new MessageController())->getConversations();
+    exit;
+}
+
+elseif ($uri === 'messages/unread-count') {
+    (new MessageController())->unreadCount();
     exit;
 }
 

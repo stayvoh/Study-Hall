@@ -3,7 +3,7 @@
 if (!isset($profilePicUrl) && isset($_SESSION['uid'])) {
     $profileModel = new Profile($this->db);
     $currentUser = $profileModel->getProfileByUserId($_SESSION['uid']);
-    $profilePicUrl = 'get_image.php?id=' . $_SESSION['uid']; // navbar only
+    $profilePicUrl = $_SESSION['uid'] ? '/get_image.php?id=' . $_SESSION['uid'] : '/images/default-avatar.jpg';
 }
 
 // Detect the current page
@@ -37,16 +37,48 @@ $isProfilePage = str_starts_with($currentPath, 'profile');
 
         <!-- Right-side buttons -->
         <div class="d-flex ms-auto align-items-center">
+            <!-- Message Notifications -->
+            <a href="/messages" class="notification-bell me-3 text-light">
+                <i class="bi bi-bell-fill"></i>
+                <span class="notification-indicator" style="display: none;"></span>
+            </a>
+            
+            <script>
+            // Update unread notifications
+            async function checkUnreadMessages() {
+                try {
+                    const response = await fetch('/messages/unread-count');
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const data = await response.json();
+                    
+                    const indicator = document.querySelector('.notification-bell .notification-indicator');
+                    if (data.unreadCount > 0) {
+                        indicator.style.display = 'block';
+                    } else {
+                        indicator.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Error checking unread messages:', error);
+                }
+            }
+
+            // Check immediately and then every 10 seconds
+            checkUnreadMessages();
+            setInterval(checkUnreadMessages, 10000);
+            </script>
+
+            <!-- Notification styles are at bottom of this file -->
+
             <?php if (!$isProfilePage): ?>
                 <!-- Profile dropdown for non-profile pages -->
                 <div class="dropdown">
                     <img 
-                        src="<?= htmlspecialchars($profilePicUrl ?? '/public/images/default-avatar.jpg') ?>" 
+                        src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.jpg') ?>" 
                         alt="Profile Picture" 
                         class="rounded-circle dropdown-toggle" 
                         id="profileDropdown" 
                         data-bs-toggle="dropdown" 
-                        style="width:40px; height:40px; cursor:pointer;"
+                        style="width:40px; height:40px; cursor:pointer; object-fit: cover;"
                     >
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
                         <li class="px-3 py-2">
@@ -56,18 +88,48 @@ $isProfilePage = str_starts_with($currentPath, 'profile');
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/profile">Profile</a></li>
                         <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/messages">Messages</a></li>
+                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="/logout">Logout</a></li>
+                      
                     </ul>
                 </div>
             <?php else: ?>
-                <!-- Back to Profile + Logout for any profile page -->
-                <a href="/profile" class="btn btn-outline-light btn-sm me-2">Back to Profile</a>
-                <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
+                <!-- Messages, Profile and Logout buttons -->
+                <a href="/messages" class="btn btn-outline-light btn-sm me-2" title="Messages">
+                    <i class="bi bi-chat-fill"></i>
+                </a>
+                <a href="/profile" class="btn btn-outline-light btn-sm me-2" title="Back to Profile">
+                    <i class="bi bi-person-fill"></i>
+                </a>
+                <a href="/logout" class="btn btn-outline-light btn-sm" title="Logout">
+                    <i class="bi bi-box-arrow-right"></i>
+                </a>
             <?php endif; ?>
         </div>
     <?php endif; ?>
   </div>
 </nav>
+<!-- Header handles notification indicator via checkUnreadMessages() defined earlier in this file -->
+</script>
+
+<style>
+.notification-bell {
+    display: inline-block;
+    position: relative;
+}
+
+.notification-indicator {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background-color: #dc3545;
+    border-radius: 50%;
+    border: 2px solid var(--bs-body-bg);
+}
+</style>
 
 <style>
   [data-bs-theme="dark"] {
