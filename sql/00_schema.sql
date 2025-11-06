@@ -136,8 +136,49 @@ CREATE TABLE IF NOT EXISTS board_follow (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+DROP TABLE IF EXISTS conversation;
+
+CREATE TABLE conversation (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  user_one_id INT UNSIGNED NOT NULL,
+  user_two_id INT UNSIGNED NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  CONSTRAINT fk_conversation_user_one FOREIGN KEY (user_one_id)
+    REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+
+  CONSTRAINT fk_conversation_user_two FOREIGN KEY (user_two_id)
+    REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+
+
+-- Messages within a conversation
+CREATE TABLE IF NOT EXISTS message (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  conversation_id INT UNSIGNED NOT NULL,
+  sender_id INT UNSIGNED NOT NULL,
+  recipient_id INT UNSIGNED NOT NULL,
+  body TEXT NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  is_read BOOLEAN NOT NULL DEFAULT FALSE,
+  CONSTRAINT fk_message_conversation FOREIGN KEY (conversation_id) REFERENCES conversation(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_message_sender FOREIGN KEY (sender_id) REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT fk_message_recipient FOREIGN KEY (recipient_id) REFERENCES user_account(id)
+    ON DELETE CASCADE ON UPDATE CASCADE,
+  INDEX idx_message_conversation (conversation_id, created_at),
+  INDEX idx_message_recipient (recipient_id, is_read)
+) ENGINE=InnoDB;
+
+CREATE INDEX idx_messages_is_read ON message(is_read);
+
 CREATE INDEX idx_board_follow_user  ON board_follow (user_id);
 CREATE INDEX idx_board_follow_board ON board_follow (board_id);
 
 ALTER TABLE tag
   ADD FULLTEXT KEY ft_tag_name (name);
+ 

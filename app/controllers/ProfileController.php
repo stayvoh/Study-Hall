@@ -26,8 +26,9 @@
             $followerCount = $profileModel->countFollowers($profileId);
             $followingCount = $profileModel->countFollowing($profileId);
 
-            // 5. Fetch boards followed by this profile
+            // 5. Fetch boards followed and created by this profile
             $followedBoards = $profileModel->getFollowedBoards($profileId);
+            $createdBoards = Board::getCreatedBoards($profileId);
 
             // 6. Check if logged-in user is viewing own profile
             $isOwnProfile = $profileId === $loggedInUserId;

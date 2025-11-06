@@ -128,6 +128,29 @@ if (is_file($hdr)) include $hdr;
 
     <!-- Boards Tab -->
     <div class="tab-pane fade" id="boards" role="tabpanel" aria-labelledby="boards-tab">
+      <!-- Created Boards Section -->
+      <h5 class="mb-3">Created Boards</h5>
+      <?php if (!empty($createdBoards)): ?>
+        <div class="list-group mb-4">
+          <?php foreach ($createdBoards as $board): ?>
+            <a href="/board?id=<?= htmlspecialchars($board['id']) ?>" class="list-group-item list-group-item-action bg-body-secondary border border-secondary mb-2">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1"><?= htmlspecialchars($board['name']) ?></h6>
+                <div>
+                  <span class="badge bg-primary me-2">Created</span>
+                  <small class="text-muted"><?= (int)$board['post_count'] ?> posts</small>
+                </div>
+              </div>
+              <p class="mb-1 text-muted"><?= htmlspecialchars($board['description'] ?? 'No description available.') ?></p>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php else: ?>
+        <p class="text-muted mb-4">This user hasn't created any boards yet.</p>
+      <?php endif; ?>
+
+      <!-- Followed Boards Section -->
+      <h5 class="mb-3">Followed Boards</h5>
       <?php if (!empty($followedBoards)): ?>
         <div class="list-group">
           <?php foreach ($followedBoards as $board): ?>
@@ -141,7 +164,7 @@ if (is_file($hdr)) include $hdr;
           <?php endforeach; ?>
         </div>
       <?php else: ?>
-        <p class="text-muted">This user isn’t following any boards yet.</p>
+        <p class="text-muted">This user isn't following any boards yet.</p>
       <?php endif; ?>
     </div>
   </div>
