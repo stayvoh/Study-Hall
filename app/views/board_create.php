@@ -1,60 +1,59 @@
-<?php declare(strict_types=1);
+<?php
+declare(strict_types=1);
+/** @var int     $boardId */
 /** @var ?string $error */
-/** @var ?bool $success */
-$error   = $error   ?? null;
-$success = $success ?? false;
+/** @var array   $old */
+/** @var string  $mode */
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+$csrf = function_exists('csrf_token') ? csrf_token() : ($_SESSION['csrf'] ??= bin2hex(random_bytes(16)));
+function h($s){ return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+$mode    = $mode ?? 'create';
+$old     = $old  ?? ['name'=>'','description'=>''];
+$boardId = (int)($boardId ?? 0);
+$pageTitle   = ($mode === 'edit') ? 'Edit board · Study Hall' : 'Create board · Study Hall';
+$heading     = ($mode === 'edit') ? 'Edit Board' : 'Create a Board';
+$submitLabel = ($mode === 'edit') ? 'Save Changes' : 'Create Board';
+$formAction = ($mode === 'edit') ? '/board/update?id=' . $boardId : '/board/create';
+$backHref = ($mode === 'edit') ? '/board?id=' . $boardId : '/dashboard';
+$backText = 'Back';
 ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Create Board – Study Hall</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/assets/custom.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <title><?= h($pageTitle) ?></title>
+  <?php $themeInit = __DIR__ . '/theme-init.php'; if (is_file($themeInit)) include $themeInit; ?>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/css/custom.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-  <div class="container py-4" style="max-width: 720px">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-      <h1 class="h3 mb-0">Create Board</h1>
-      <a class="btn btn-outline-secondary" href="/boards">Cancel</a>
-    </div>
+<body class="bg-body">
+<?php $hdr = __DIR__ . '/header.php'; if (is_file($hdr)) include $hdr; ?>
 
-    <?php if ($success): ?>
-      <div class="alert alert-success shadow-sm">
-        Board created. <a class="alert-link" href="/boards">Back to boards</a>
-      </div>
-    <?php endif; ?>
-
-    <?php if ($error): ?>
-      <div class="alert alert-danger shadow-sm"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-
-    <div class="card border-0 shadow-sm">
-      <div class="card-body">
-        <form method="post" action="/board/create" novalidate>
-          <input type="hidden" name="csrf" value="<?= htmlspecialchars(csrf_token()) ?>">
-
-          <div class="mb-3">
-            <label class="form-label">Name</label>
-            <input class="form-control" name="name" maxlength="100" required>
-            <div class="form-text">Required. Max 100 characters.</div>
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label">Description <span class="text-muted">(optional)</span></label>
-            <textarea class="form-control" name="description" rows="3" maxlength="255"></textarea>
-            <div class="form-text">Up to 255 characters.</div>
-          </div>
-
-          <div class="d-flex gap-2">
-            <button class="btn btn-green" type="submit">Create</button>
-            <a class="btn btn-outline-secondary" href="/boards">Cancel</a>
-          </div>
-        </form>
-      </div>
-    </div>
-
+<div class="container py-4" style="max-width: 800px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0"><?= h($heading) ?></h3>
+    <a class="btn btn-outline-secondary btn-sm" href="<?= h($backHref) ?>"><?= h($backText) ?></a>
   </div>
+
+  <?php if (!empty($error)): ?>
+    <div class="alert alert-danger"><?= h($error) ?></div>
+  <?php endif; ?>
+
+  <form method="post" action="<?= h($formAction) ?>">
+    <input type="hidden" name="csrf" value="<?= h($csrf) ?>">
+    <div class="mb-3">
+      <label class="form-label">Board Name</label>
+      <input name="name" class="form-control" maxlength="100" required value="<?= h($old['name'] ?? '') ?>">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <textarea name="description" class="form-control" rows="4"><?= h($old['description'] ?? '') ?></textarea>
+    </div>
+    <button class="btn btn-orange"><?= h($submitLabel) ?></button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

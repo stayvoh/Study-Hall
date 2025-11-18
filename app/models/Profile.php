@@ -119,12 +119,15 @@ class Profile {
     public function getFollowing($userId, $search = '')
         {
             $sql = "
-                SELECT 
+                SELECT DISTINCT
                     u.id AS user_id, 
-                    p.username
+                    COALESCE(p.username, u.email) AS username,
+                    p.profile_picture,
+                    p.mime_type,
+                    p.bio
                 FROM user_follow f
                 JOIN user_account u ON f.following_id = u.id
-                JOIN user_profile p ON p.user_id = u.id
+                LEFT JOIN user_profile p ON p.user_id = u.id
                 WHERE f.follower_id = :uid
             ";
 

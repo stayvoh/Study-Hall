@@ -41,7 +41,7 @@ if (is_file($hdr)) include $hdr;
       <form method="POST" action="/profile/update" enctype="multipart/form-data">
         <div class="row align-items-center mb-3">
           <div class="col-md-4 text-center mb-3 mb-md-0">
-            <img src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.png') ?>" 
+            <img src="<?= htmlspecialchars($profilePicUrl ?? '/images/default-avatar.jpg') ?>" 
                  class="rounded-circle border border-secondary"
                  style="width: 150px; height: 150px; object-fit: cover;" 
                  alt="Profile Picture">

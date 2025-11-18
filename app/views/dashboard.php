@@ -12,12 +12,18 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Bootstrap Icons -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/css/custom.css" rel="stylesheet">
+  <link href="/css/custom.css?v=20251103b" rel="stylesheet">
 </head>
 <body class="bg-body">
 <?php
   $hdr = __DIR__ . '/header.php';
   if (is_file($hdr)) include $hdr;
+  function dash_page_url(int $p): string {
+    $params = $_GET ?? [];
+    $params['page'] = $p;
+    $path = strtok($_SERVER['REQUEST_URI'], '?');
+    return $path . '?' . http_build_query($params);
+  }
 ?>
 <section class="py-5 text-center">
   <div class="container">
@@ -39,7 +45,9 @@
         </select>
       </div>
       <div class="col-12 col-md-2 d-grid">
-        <button class="btn btn-primary btn-lg" type="submit">Search</button>
+        <button class="btn btn-orange btn-lg" type="submit">
+          <i class="bi bi-search"></i>
+        </button>
       </div>
     </form>
   </div>
@@ -49,7 +57,14 @@
 <?php if (!empty($boards) && is_array($boards)): ?>
 <div class="container mb-4" style="max-width: 1000px;">
   <div class="d-flex align-items-center justify-content-between mb-3">
-    <h4 class="mb-0">Boards</h4>
+    <div class="container-fluid px-0">
+      <div class="d-flex justify-content-between align-items-center mb-2" style="width:100%;">
+        <h4 class="mb-0">Boards</h4>
+        <a href="/board/create" class="btn btn-sm btn-orange">
+          <i class="bi bi-plus-lg"></i> Create Board
+        </a>
+      </div>
+    </div>
   </div>
 
   <div class="row g-3">
@@ -71,6 +86,54 @@
       </div>
     <?php endforeach; ?>
   </div>
+
+  <!-- pagination -->
+  <?php if (!empty($pagination) && ($pagination['lastPage'] ?? 1) > 1): 
+    $page = (int)$pagination['page'];
+    $last = (int)$pagination['lastPage'];
+
+    $start = max(1, $page - 2);
+    $end   = min($last, $page + 2);
+    if ($end - $start < 4) {
+      if ($start === 1) { $end = min($last, $start + 4); }
+      if ($end === $last) { $start = max(1, $end - 4); }
+    }
+  ?>
+    <nav aria-label="Boards pagination" class="mt-3">
+      <ul class="pagination justify-content-center mb-0">
+        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page > 1 ? dash_page_url(1) : '#' ?>" aria-label="First">
+            <span aria-hidden="true">&laquo;&laquo;</span>
+          </a>
+        </li>
+        <li class="page-item <?= $page <= 1 ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page > 1 ? dash_page_url($page - 1) : '#' ?>" aria-label="Previous">
+            <span aria-hidden="true">&laquo;</span>
+          </a>
+        </li>
+
+        <?php for ($i = $start; $i <= $end; $i++): ?>
+          <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+            <a class="page-link" href="<?= dash_page_url($i) ?>"><?= $i ?></a>
+          </li>
+        <?php endfor; ?>
+
+        <li class="page-item <?= $page >= $last ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page < $last ? dash_page_url($page + 1) : '#' ?>" aria-label="Next">
+            <span aria-hidden="true">&raquo;</span>
+          </a>
+        </li>
+        <li class="page-item <?= $page >= $last ? 'disabled' : '' ?>">
+          <a class="page-link" href="<?= $page < $last ? dash_page_url($last) : '#' ?>" aria-label="Last">
+            <span aria-hidden="true">&raquo;&raquo;</span>
+          </a>
+        </li>
+      </ul>
+      <p class="text-center text-muted small mt-2 mb-0">
+        Showing page <?= $page ?> of <?= $last ?><?= isset($pagination['total']) ? ' · ' . (int)$pagination['total'] . ' boards' : '' ?>
+      </p>
+    </nav>
+  <?php endif; ?>
 </div>
 <?php else: ?>
   <div class="container mb-5" style="max-width: 1000px;">
@@ -79,7 +142,6 @@
 <?php endif; ?>
 
 <script>
-  // Enables/disables the tag filter depending on dropdown
   function toggleTagField() {
     const sel = document.querySelector('select[name="type"]');
     const tag = document.getElementById('tagField');

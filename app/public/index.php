@@ -34,6 +34,7 @@ require __DIR__ . '/../controllers/BoardController.php';
 require __DIR__ . '/../controllers/PostController.php';
 require __DIR__ . '/../controllers/SearchController.php';
 require __DIR__ . '/../controllers/TagController.php';
+require __DIR__ . '/../controllers/MessageController.php';
 
 // -------------------------------------------------------------
 // Helpers
@@ -123,18 +124,51 @@ elseif ($uri === 'board/create') {
     exit;
 }
 
+elseif ($uri === 'board/edit') {
+    (new BoardController())->editForm((int)($_GET['id'] ?? 0)); exit;
+}
+elseif ($uri === 'board/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new BoardController())->update((int)($_GET['id'] ?? 0)); exit;
+}
+elseif ($uri === 'board/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new BoardController())->delete((int)($_GET['id'] ?? 0)); exit;
+}
+
 // --- Posts ---
-elseif ($uri === 'post') { // /post?id=123
+elseif ($uri === 'post') {
     $controller = new PostController();
     $id = (int)($_GET['id'] ?? 0);
     if (is_post()) $controller->comment($id); else $controller->show($id);
     exit;
 }
 
-elseif ($uri === 'post/create') { // /post/create?b=123
+elseif ($uri === 'post/create') {
     $controller = new PostController();
     $boardId = (int)($_GET['b'] ?? 0);
     if (is_post()) $controller->create($boardId); else $controller->createForm($boardId);
+    exit;
+}
+
+elseif ($uri === 'post/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new PostController())->delete((int)($_GET['id'] ?? 0));
+    exit;
+}
+
+elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new PostController())->deleteComment((int)($_GET['id'] ?? 0));
+    exit;
+}
+elseif ($uri === 'post/edit') {
+    // GET /post/edit?id=123  -> show edit form
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->editPost($id);
+    exit;
+}
+
+elseif ($uri === 'post/update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    // POST /post/update?id=123 -> save changes
+    $id = (int)($_GET['id'] ?? 0);
+    (new PostController())->update($id);
     exit;
 }
 
@@ -163,16 +197,12 @@ elseif ($uri === 'tags') {
     exit;
 }
 
-elseif ($uri === 'tag') { // /tag?slug=php
+elseif ($uri === 'tag') {
     $slug = (string)($_GET['slug'] ?? '');
     (new TagController())->show($slug);
     exit;
 }
 
-elseif (preg_match('~^tag/([a-z0-9-]+)$~', $uri, $m)) {
-    (new TagController())->show($m[1]);
-    exit;
-}
 elseif ($uri === 'profile/follow') {
     if (!is_post()) { http_response_code(405); exit; }
     $profileId = (int)($_POST['profile_id'] ?? 0);
@@ -226,7 +256,46 @@ elseif ($uri === 'profile/followers') {
 } elseif ($uri === 'profile/following') {
     (new ProfileController())->following();
     exit;
-} 
+}
+
+elseif ($uri === 'comment/delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+    (new PostController())->deleteComment($id);
+    exit;
+}
+// --- Messages ---
+elseif ($uri === 'messages') {
+    // Render the messages view (UI page)
+    (new MessageController())->index();
+    exit;
+}
+
+// --- Message API ---
+elseif ($uri === 'messages/send' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    (new MessageController())->send();
+    exit;
+}
+
+elseif ($uri === 'messages/getOrCreate') {
+    // AJAX endpoint to get or create a conversation between two users
+    (new MessageController())->getOrCreate();
+    exit;
+}
+
+elseif ($uri === 'messages/poll') {
+    (new MessageController())->poll();
+    exit;
+}
+
+elseif ($uri === 'messages/conversations') {
+    (new MessageController())->getConversations();
+    exit;
+}
+
+elseif ($uri === 'messages/unread-count') {
+    (new MessageController())->unreadCount();
+    exit;
+}
 
 // -------------------------------------------------------------
 // 404 Fallback

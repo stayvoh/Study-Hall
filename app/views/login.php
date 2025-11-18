@@ -33,7 +33,7 @@
             </div>
 
             <!-- Remember + Forgot -->
-            <div class="row mb-4">
+            <!--<div class="row mb-4">
               <div class="col d-flex justify-content-start">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" name="remember" id="remember" />
@@ -43,7 +43,7 @@
               <div class="col text-end">
                 <a href="/forgot" class="forgot-link">Forgot password?</a>
               </div>
-            </div>
+            </div>-->
 
             <!-- Submit -->
             <button type="submit" class="btn btn-orange btn-block w-100 mb-4">Sign in</button>
